@@ -1,0 +1,39 @@
+// FILE  : sieve-no-cli.gr
+// AUTHOR: Eugene Wallingford
+// DATE  : 2019/12/18
+// TASK  : computes and prints a Sieve of Eratosthenes up to 40
+//         does not use command-line argument
+
+fn main(n : integer) -> boolean
+   sieveAt(2, 40)
+
+fn sieveAt(current : integer, max : integer) -> boolean
+   if (max < current)
+      true
+   else
+      doSieveAt(current, max)
+
+// doSieveAt exists only because calls to print are allowed
+// only as the first expression in the body of function.
+
+fn doSieveAt(current : integer, max : integer) -> boolean
+   print(if (isPrime(current)) current else 0)
+   sieveAt(current+1, max)
+
+fn isPrime(n : integer) -> boolean
+   not hasDivisorFrom(2, n)
+
+fn hasDivisorFrom(i : integer, n : integer) -> boolean
+   if (i < n)
+      divides(i, n) or hasDivisorFrom(i+1, n)
+   else
+      false
+
+fn divides(a : integer, b : integer) -> boolean
+   rem(b, a) == 0
+
+fn rem(num : integer, den : integer) -> integer
+   if (num < den)
+      num
+   else
+      rem( num-den, den)

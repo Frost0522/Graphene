@@ -1,0 +1,36 @@
+//
+// FILE  : factors.kln
+// AUTHOR: Eugene Wallingford
+// DATE  : 2010/11/11
+// TASK  : print all the factors of integer n that are less than n
+//         and return n (the largest factor)
+//
+// CHANGE: 2022/08/31 -- replaced recursive remainder with MOD function
+//
+
+fn main(n : integer) -> integer
+   loopToN(n, 1)
+
+fn loopToN(n : integer, current : integer) -> integer
+   if (n == current)
+      n
+   else
+      testAndLoop(n, current)
+
+fn testAndLoop(n : integer, current : integer) -> integer
+   if (divides(current, n))
+      printAndLoop(n, current)
+   else
+      loopToN(n, current+1)
+
+fn printAndLoop(n : integer, current : integer) -> integer
+   print(current)
+   loopToN(n, current+1)
+
+fn divides(a : integer, b : integer) -> boolean
+   MOD(b, a) == 0
+
+// function from the Graphene library
+
+fn MOD(m : integer, n : integer) -> integer
+   m - n*(m/n)

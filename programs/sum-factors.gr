@@ -1,0 +1,34 @@
+// FILE  : sum-factors.gr
+// AUTHOR: Eugene Wallingford
+// DATE  : 2019/09/10
+// TASK  : prints all the factors of an integer n, summing them
+//         along the way, and returns n - sum()
+
+fn loopToN(n : integer, current : integer, sum : integer) -> integer
+   if (n == current)
+      n - sum
+   else
+      testAndLoop(n, current, sum)
+
+fn testAndLoop(n : integer, current : integer, sum : integer) -> integer
+   if (divides(current, n))
+      printCurrentAndLoop(n, current, sum+current)
+   else
+      loopToN(n, current+1, sum)
+
+fn printCurrentAndLoop(n : integer, current : integer, sum : integer)
+   -> integer
+   print(current)
+   loopToN(n, current+1, sum)
+
+fn divides(a : integer, b : integer) -> boolean
+   remainder(b, a) == 0
+
+fn remainder(num : integer, den : integer) -> integer
+   if (num < den)
+      num
+   else
+      remainder(num-den, den)
+
+fn main(n : integer) -> integer
+   loopToN(n, 1, 0)     // n, current, sum
