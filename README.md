@@ -14,16 +14,19 @@ The workspace contains multiple folders by default, where:
 
 Meanwhile, the compiled output files will be generated in the `bin` folder by default.
 
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
-
 > If you would like to see more on the full language specification as well, [this](https://www.cs.uni.edu/~wallingf/teaching/cs4550/compiler/specification.html) will provide further details.
 
 ## General
 
-There are going to be multiple uploads as I work my way through the various stages of the compiler construction process. First will be the scanner (completed, but not final!), then the parser, semantic checker, and finally the code generation. More on these later. This project was part of my final undergraduate research that was done in a group. I would like to now look back on this experience and work on the parts of the compiler that, orginally, I never got to fully understand.
+There are going to be multiple uploads as I work my way through the various stages of the compiler construction process. First will be the scanner (completed), then the parser (partially completed), semantic checker, and finally the code generation. More on these later. This project was part of my final undergraduate research that was done in a group. I would like to now look back on this experience and work on the parts of the compiler that, orginally, I never got to fully understand.
 
-> If you would like to run the compiler in its current state, just the scanner (produces tokens of the language), simply run graphenes in source followed by a Graphene program of your choosing. 
+> If you would like to run the compiler in its current state, in a console, run graphenes or graphenef in source, followed by a Graphene program of your choosing. The script graphenes will produce the output for tokens of the Graphene language, while graphenef will output true or false depending on if the program is valid or not.
 
 ## To-Do
 
 - `State desgin pattern` : Revisit the scanner to properly implement [this](https://sourcemaking.com/design_patterns/state) pattern.
+
+## Bug Fixes
+
+- `x==y` : Fixed an issue with the scanner in which an error was thrown any time a valid identifer `x` was next to the operator `==`.
+- `fn main() -> boolean print()` : Because functions must be of a return type (In this case `boolean`.) a check for the parser was added to the bodies of functions in which a print expression can not be the only expression of a function body.
