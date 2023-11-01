@@ -24,9 +24,15 @@ There are going to be multiple uploads as I work my way through the various stag
 
 ## To-Do
 
-- `State desgin pattern` : Revisit the scanner to properly implement [this](https://sourcemaking.com/design_patterns/state) pattern.
+> - `State desgin pattern` : Revisit the scanner to properly implement [this](https://sourcemaking.com/design_patterns/state) pattern.
+
+- `Parser error handling` : Revist the parser to properly implement errors that will need to be caught at this stage.
+
+- `Next stage for parsing` : Modify table-driven parser to produce abstract syntax tree. 
 
 ## Bug Fixes
 
 - `x==y` : Fixed an issue with the scanner in which an error was thrown any time a valid identifer `x` was next to the operator `==`.
 - `fn main() -> boolean print()` : Because functions must be of a return type (In this case `boolean`.) a check for the parser was added to the bodies of functions in which a print expression can not be the only expression of a function body.
+
+- `>, ?, #` : The scanner had issues with certain charaters unrecognized by the language and will now properly handle these chracters, as well as throw correct errors.
