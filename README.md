@@ -12,15 +12,13 @@ The workspace contains multiple folders by default, where:
 - `source\src` : where source code is located.
 - `tests`      : various Graphene test code used to debug source code.
 
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
-
-> If you would like to see more on the full language specification as well, [this](https://www.cs.uni.edu/~wallingf/teaching/cs4550/compiler/specification.html) will provide further details.
+Compiled output files will be generated in `bin`.
 
 ## General
 
-There are going to be multiple uploads as I work my way through the various stages of the compiler construction process. First will be the scanner (completed), then the parser (partially completed), semantic checker, and finally the code generation. More on these later. This project was part of my final undergraduate research that was done in a group. I would like to now look back on this experience and work on the parts of the compiler that, orginally, I never got to fully understand.
+As I work my way through building the compiler I will be uploading snapshots of it's completion at various stages. First will be the scanner (finished), then the parser (partially finished), semantic checker, and finally the code generation. This project was part of my final undergraduate research that was completed in a group setting. I would now like to revisit and work on parts of the compiler that, orginally, I never got to fully understand.
 
-> If you would like to run the compiler in its current state, in a console, run graphenes or graphenef in source, followed by a Graphene program of your choosing. The script graphenes will produce the output for tokens of the Graphene language, while graphenef will output true or false depending on if the program is valid or not.
+> If you would like to run the compiler at it's various stages, in a console, run graphenes or graphenef in source, followed by a Graphene program of your choosing. The script graphenes will produce the output for tokens of the Graphene language, while graphenef will output true depending on if the program is valid or not.
 
 ## To-Do
 
