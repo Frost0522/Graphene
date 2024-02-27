@@ -16,9 +16,14 @@ Compiled output files will be generated in `bin`.
 
 ## General
 
-As I work my way through building the compiler I will be uploading snapshots of it's completion at various stages. First will be the scanner (finished), then the parser (partially finished), semantic checker, and finally the code generation. This project was part of my final undergraduate research that was completed in a group setting. I would now like to revisit and work on parts of the compiler that, orginally, I never got to fully understand.
+As I work my way through building the compiler I will be uploading snapshots of it's completion at various stages. First will be the scanner (finished), then the parser (partially finished), semantic checker, and finally the code generation. This project was part of my final undergraduate research that was completed in a group setting. I would now like to revisit and work on parts of the compiler that, orginally, I never got to fully understand. 
 
 > If you would like to run the compiler at it's various stages, in a console, run graphenes or graphenef in source, followed by a Graphene program of your choosing. The script graphenes will produce the output for tokens of the Graphene language, while graphenef will output true depending on if the program is valid or not.
+
+In order to verify and test that my code is running properly I currently have a couple temporary scripts.
+- `current_build` : Running 'current_build' followed by a Graphene program will compile and run the current version of Graphene on that program.
+- `cb_programs` : Running 'cb_programs' will compile and run the current version of Graphene on all programs in the programs directory.
+- `cb_tests` : Running 'cb_tests' will compile and run the current version of Graphene on all programs in the tests directory.
 
 ## To-Do
 
