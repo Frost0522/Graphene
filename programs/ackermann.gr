@@ -1,0 +1,19 @@
+// An implementation of the Ackermann function, one of the simplest
+// total computable functions that is not primitive recursive --
+// that is, it cannot be written only with for loops.  Its value
+// grows rapidly, even for small inputs.  For example, A(4, 2) is
+// an integer of 19,729 decimal digits.  This implementation sets
+// the first argument to 3, which allows it to reach A(3, 7) = 1021
+// before reaching the limit of Python's default maximum stack depth
+// at A(3, 8).
+
+fn main(n : integer) -> integer
+   ack(3, n)
+
+fn ack(m : integer, n : integer) -> integer
+   if (m == 1)
+      n+1
+   else if (n == 0)
+      ack(m-1, 1)
+   else
+      ack(m-1, ack(m, n-1))

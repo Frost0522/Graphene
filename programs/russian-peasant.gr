@@ -1,0 +1,13 @@
+fn MOD( m : integer, n : integer ) -> integer
+   m - m/n * n
+
+fn multWithAccum(m : integer, n : integer, accum : integer) -> integer
+   if (n == 0)
+      accum
+   else if (MOD(n, 2) == 1)
+      multWithAccum(m*2, n/2, accum+m)
+   else
+      multWithAccum(m*2, n/2, accum)
+
+fn main(m : integer, n : integer) -> integer
+   multWithAccum(m, n, 0)
