@@ -15,5 +15,4 @@ public class Type implements UnaryExp {
     public Node accept(AstVisitor v) {
         return v.visit(this);
     }
-    
 }

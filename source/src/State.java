@@ -5,7 +5,7 @@ import java.util.ArrayList;
 abstract class State {
     protected StringBuffer buff = new StringBuffer();
 
-    abstract Token process(ArrayList<State> var1, ArrayList<Integer> var2, Integer var3) throws Analyzer, IOException;
+    abstract Token process(ArrayList<State> stateList, ArrayList<Integer> charList, Integer next) throws Analyzer, IOException;
 
     protected boolean isSkippable(Integer val) {
         ArrayList<Integer> skippable = new IntegerList(new Integer[]{9, 32, 13, 10}).get();
@@ -18,10 +18,6 @@ abstract class State {
 
     protected boolean isNewLine(Integer value) throws IOException {
         return value == 10;
-    }
-
-    protected boolean isComment(Integer value) throws IOException {
-        return value == -10;
     }
 
     protected boolean isAlpha(Integer val) {

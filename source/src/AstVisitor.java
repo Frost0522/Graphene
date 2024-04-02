@@ -16,4 +16,6 @@ public interface AstVisitor {
     public Node visit(LessThan binary);
     public Node visit(Function exp);
     public Node visit(FunctionCall exp);
+    public Node visit(IfElse exp);
+    public Node visit(Program exp);
 }

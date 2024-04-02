@@ -4,7 +4,8 @@ import java.io.PushbackReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class Scanner_v2 {
+public class Scanner {
+    
     public ArrayList<State> stateLst = new ArrayList<>();
     public ArrayList<Integer> charLst = new ArrayList<>();
     public ArrayList<Token> tokenLst = new ArrayList<>();
@@ -13,9 +14,9 @@ public class Scanner_v2 {
     public static HashMap<Lexical, ArrayList<Integer>> lexicalMap = new HashMap<>();
     public static PushbackReader pushReader;
 
-    public Scanner_v2(PushbackReader reader) throws Analyzer, IOException {
+    public Scanner(PushbackReader reader) throws Analyzer, IOException {
         pushReader = reader;
-        Scanner_v2.populateMap();
+        Scanner.populateMap();
         Boolean run = true;
 
         stateLst.add(new State_0());
@@ -26,9 +27,9 @@ public class Scanner_v2 {
         stateLst.add(new State_5());
         
         State startState = stateLst.get(0);
-        while (run.booleanValue()) {
+        while (run) {
             try {
-                Token token = startState.process(stateLst, charLst, Scanner_v2.next());
+                Token token = startState.process(stateLst, charLst, Scanner.next());
                 if (token.getType().equals(Lexical.NEWLINE) && !tokenLst.isEmpty()) {
                     ++line;
                     column = 1;

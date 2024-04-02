@@ -20,12 +20,17 @@ public class Token {
         return charList;
     }
 
+    public int getSize() {
+        return charList.size();
+    }
+
     public Lexical getSymbol() {
         return symbol;
     }
 
     public void flipSymbol() {
-        symbol = Lexical.MINUS;
+        if (symbol.equals(Lexical.PLUS)) {symbol = Lexical.MINUS;}
+        else {symbol = Lexical.PLUS;}
     }
 
     private ArrayList<Integer> setList(ArrayList<Integer> list) {

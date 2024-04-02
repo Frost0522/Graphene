@@ -2,12 +2,14 @@ package src;
 
 public class Node {
 
+    private Program program;
     private Identifier id;
     private Type type;
     private Parameter param;
     private Equality equality;
     private Function function;
     private FunctionCall call;
+    private IfElse ifState;
     private Literal literal;
     private Minus minus;
     private Plus plus;
@@ -18,6 +20,10 @@ public class Node {
     private LessThan less;
 
     private Lexical value;
+
+    public Node() {
+        value = Lexical.$;
+    }
 
     public Node(Identifier i) {
         id = i;
@@ -48,6 +54,11 @@ public class Node {
     public Node(FunctionCall fc) {
         call = fc;
         value = Lexical.FNCALL;
+    }
+
+    public Node(IfElse i) {
+        ifState = i;
+        value = Lexical.IF;
     }
 
     public Node(Literal lit) {
@@ -90,63 +101,76 @@ public class Node {
         value = Lexical.LESS_THAN;
     }
 
+    public Node(Program p) {
+        program = p;
+        value = Lexical.PROGRAM;
+    } 
+
     protected Identifier getId() {
-        return this.id;
+        return id;
     }
 
     protected Type getType() {
-        return this.type;
+        return type;
     }
 
     protected Parameter getParam() {
-        return this.param;
+        return param;
     }
 
     protected Equality getEquality() {
-        return this.equality;
+        return equality;
     }
 
     protected Function getFn() {
-        return this.function;
+        return function;
+    }
+
+    protected IfElse getIfElse() {
+        return ifState;
     }
 
     protected FunctionCall getFnCall() {
-        return this.call;
+        return call;
     }
 
     protected Literal getLiteral() {
-        return this.literal;
+        return literal;
     }
 
     protected Minus getMinus() {
-        return this.minus;
+        return minus;
     }
 
     protected Plus getPlus() {
-        return this.plus;
+        return plus;
     }
 
     protected Divide getDivide() {
-        return this.divide;
+        return divide;
     }
 
     protected Times getTimes() {
-        return this.times;
+        return times;
     }
 
     protected And getAnd() {
-        return this.and;
+        return and;
     }
 
     protected Or getOr() {
-        return this.or;
+        return or;
     }
 
     protected LessThan getLessThan() {
-        return this.less;
+        return less;
+    }
+
+    protected Program getProgram() {
+        return program;
     }
 
     protected Lexical valueOf() {
-        return this.value;
+        return value;
     }
 }

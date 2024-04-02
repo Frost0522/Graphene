@@ -1,0 +1,25 @@
+// Leading with keywords.
+
+fn integerTest() -> boolean true
+fn booleanTest() -> boolean true
+fn ifTest() -> boolean true
+fn elseTest() -> boolean true
+fn notTest() -> boolean true
+fn andTest() -> boolean true
+fn fnTest() -> boolean true
+fn orTest() -> boolean true
+fn trueTest() -> boolean true
+fn falseTest() -> boolean true
+
+// Trailing with keywords.
+
+fn Testinteger() -> boolean true
+fn Testboolean() -> boolean true
+fn Testif() -> boolean true
+fn Testelse() -> boolean true
+fn Testnot() -> boolean true
+fn Testand() -> boolean true
+fn Testfn() -> boolean true
+fn Testor() -> boolean true
+fn Testtrue() -> boolean true
+fn Testfalse() -> boolean true

@@ -1,2 +1,5 @@
+fn main() -> integer
+   a + 1
+
 main() -> integer
    a + 1

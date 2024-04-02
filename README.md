@@ -16,7 +16,7 @@ Compiled output files will be generated in `bin`.
 
 ## General
 
-As I work my way through building the compiler I will be uploading snapshots of it's completion at various stages. First will be the scanner (finished), then the parser (partially finished), semantic checker, and finally the code generation. This project was part of my final undergraduate research that was completed in a group setting. I would now like to revisit and work on parts of the compiler that, orginally, I never got to fully understand. 
+As I work my way through building the compiler I will be uploading snapshots of it's completion at various stages. First will be the scanner, then the parser, semantic checker, and finally the code generation. This project was part of my final undergraduate research that was completed in a group setting. I would now like to revisit and work on parts of the compiler that, orginally, I never got to fully understand. 
 
 > If you would like to run the compiler at it's various stages, in a console, run graphenes or graphenef in source, followed by a Graphene program of your choosing. The script graphenes will produce the output for tokens of the Graphene language, while graphenef will output true depending on if the program is valid or not.
 
@@ -31,9 +31,11 @@ In order to verify and test that my code is running properly I currently have a 
 
 > `Parser error handling` : Revist the parser to properly implement errors that will need to be caught at this stage.
 
-- `Next stage for parsing` : Modify table-driven parser to produce abstract syntax tree. 
+> `Next stage for parsing` : Modify table-driven parser to produce abstract syntax tree.
 
-## Bug Fixes
+- 
+
+## Bug Fixes / Updates
 
 - `x==y` : Fixed an issue with the scanner in which an error was thrown any time a valid identifer `x` was next to the operator `==`.
 
@@ -42,3 +44,7 @@ In order to verify and test that my code is running properly I currently have a 
 - `>, ?, #` : The scanner had issues with certain charaters unrecognized by the language and will now properly handle these chracters, as well as throw correct errors.
 
 - `missing non-terminal rules` : A function of the parser handling rules of the [parse table](https://github.com/Frost0522/Graphene/tree/main/documents) was not checking for tokens of type 'equality' and 'less than' for non-terminal rules, 'simple expression tail' and 'term tail', resulting in errors being thrown.
+
+- `issues with identifiers` : When naming an identifier, if you were to lead, or trail behind, with characters recognized as keywords, an early syntax error would be thrown. As a consequence, an extra check has been added to State_1.
+
+- `updated parsing errors` : Previously, when specifying the type on a parameter, if the type was either misspelled or forgotten, an incorrect error would be thrown stating the function return type is undefined.

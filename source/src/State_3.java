@@ -10,7 +10,19 @@ class State_3 extends State {
         }
         if (currentChar.equals(Lexical.DIVIDE.value())) {
             charLst.clear();
-            return stateLst.get(0).process(stateLst, charLst, Integer.valueOf(-10));
+            while (!isNewLine(currentChar)) {
+                currentChar = Scanner.next();
+                if (isEof(Scanner.peek())) {
+                    return new Token(Lexical.$, charLst);
+                }
+            }
+            return new Token(Lexical.NEWLINE, new ArrayList<>());
+        }
+        if (isEof(currentChar)) {
+            for (int _int : charLst) {
+                buff.append(Character.toString(_int));
+            }
+            throw new Analyzer("Syntax error: Unexpected characters '" + buff.toString() + "'.");
         }
         charLst.add(currentChar);
         for (int _int : charLst) {

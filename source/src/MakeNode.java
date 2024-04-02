@@ -71,4 +71,14 @@ public class MakeNode implements AstVisitor {
     public Node visit(FunctionCall exp) {
         return new Node(exp);
     }
+
+    @Override
+    public Node visit(IfElse exp) {
+        return new Node(exp);
+    }
+
+    @Override
+    public Node visit(Program exp) {
+        return new Node(exp);
+    }
 }

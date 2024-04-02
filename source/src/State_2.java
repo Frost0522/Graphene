@@ -15,9 +15,9 @@ class State_2 extends State {
             return new Token(Lexical.INTEGER_LITERAL, charLst);
         }
         if (isNumeric(currentChar)) {
-            Scanner_v2.next();
+            Scanner.next();
             charLst.add(currentChar);
-            if (equalsAll(Scanner_v2.peek(), new IntegerList(new Integer[]{Lexical.RIGHT_PAREN.value(), Lexical.COMMA.value(), Lexical.MINUS.value(), Lexical.PLUS.value(), Lexical.TIMES.value(), Lexical.LESS_THAN.value(), Lexical.DIVIDE.value(), Lexical.EQUALS.value()}))) {
+            if (equalsAll(Scanner.peek(), new IntegerList(new Integer[]{Lexical.RIGHT_PAREN.value(), Lexical.COMMA.value(), Lexical.MINUS.value(), Lexical.PLUS.value(), Lexical.TIMES.value(), Lexical.LESS_THAN.value(), Lexical.DIVIDE.value(), Lexical.EQUALS.value()}))) {
                 for (int _int : charLst) {
                     buff.append(Character.toString(_int));
                 }
@@ -27,7 +27,7 @@ class State_2 extends State {
                 }
                 throw new Analyzer("Syntax Error: Integer literal exceeds max value of 2^(31)-1.");
             }
-            return stateLst.get(2).process(stateLst, charLst, Integer.valueOf(Scanner_v2.peek()));
+            return stateLst.get(2).process(stateLst, charLst, Integer.valueOf(Scanner.peek()));
         }
         if (equalsAll(currentChar, new IntegerList(new Integer[]{Lexical.RIGHT_PAREN.value(), Lexical.COMMA.value(), Lexical.MINUS.value(), Lexical.PLUS.value(), Lexical.TIMES.value(), Lexical.LESS_THAN.value(), Lexical.DIVIDE.value(), Lexical.EQUALS.value()})) || isSkippable(currentChar)) {
             currentChar.equals(13);
