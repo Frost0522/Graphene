@@ -11,9 +11,6 @@ class State_5 extends State {
             }
             return new Token(Lexical.MINUS, charLst);
         }
-        // if (currentChar.equals(Lexical.LEFT_PAREN.value())) {
-        //     return new Token(Lexical.MINUS, charLst);
-        // }
         if (currentChar.equals(Lexical.GREATERTHAN.value())) {
             charLst.add(currentChar);
             Scanner.next();

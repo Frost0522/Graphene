@@ -4,7 +4,7 @@
 
 // This is also a problem..
 // fn main() -> integer 1 + -1
-fn main() -> integer 1 + -(a + b)
+fn main() -> integer print + 1
 
 // Find solution for trick for bypass error..
 // fn main() -> integer 1 + (print)

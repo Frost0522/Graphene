@@ -313,7 +313,10 @@ public class Parser {
                 }
                 new Analyzer(tokenList, deadLst, pStack, line, column);
             }
-            default: {break;}
+            default: {
+                System.out.println("Next token type -> "+nextType+"\nTop of parse stack -> "+pStack.peek()+"\n");
+                break;
+            }
         }
     }
 
