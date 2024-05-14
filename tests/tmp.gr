@@ -1,1 +1,27 @@
-fn main() -> integer -(-c)*
+/////////////////////////////////////////
+// Tests that have yet to fail.        //
+/////////////////////////////////////////
+
+// This is also a problem..
+// fn main() -> integer 1 + -1
+fn main() -> integer 1 + -(a + b)
+
+// Find solution for trick for bypass error..
+// fn main() -> integer 1 + (print)
+
+/////////////////////////////////////////
+// Tests that have failed successfully.//
+/////////////////////////////////////////
+
+// fn main() -> integer print + 1
+// fn main() -> integer print() + 1
+// fn main() -> integer print(1) + 1
+// fn main() -> integer -print + 1
+// fn main() -> integer 1 + print
+// fn main() -> integer 1 + -print
+// fn main() -> integer if + 1
+// fn main() -> integer if() + 1
+// fn main() -> integer if(1<2) + 1
+// fn main() -> integer -if + 1
+// fn main() -> integer 1 + if
+// fn main() -> integer 1 + -if

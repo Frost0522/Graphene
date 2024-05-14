@@ -10,6 +10,7 @@ public class Times implements BinaryExp {
     public Times(Stack<Node> stack) {
         rightNode = stack.pop();
         leftNode = stack.pop();
+        
     }
 
     protected Node getLeftNode() {return leftNode;}

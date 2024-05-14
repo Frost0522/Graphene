@@ -128,9 +128,25 @@ public enum Lexical {
         }   return $;
     }
 
+// Used for getting integer arrays of keywords in parsing process.
+    public static ArrayList<Integer> getPrint() {
+        return new IntegerList(new Integer[]{112, 114, 105, 110, 116}).get();
+    }
+
+    public static ArrayList<Integer> getIf() {
+        return new IntegerList(new Integer[]{105,102}).get();
+    }
+
+// Used for checking if a parse stack value, of type lexical, adheres to a particular set of rules.
     public static ArrayList<Lexical> isTerminal() {
         ArrayList<Lexical> list = new ArrayList<>();
         Collections.addAll(list,FN,LEFT_PAREN,RIGHT_PAREN,RETURN,COMMA,COLON,INTEGER,BOOLEAN,EQUIVALENT,LESS_THAN,OR,PLUS,MINUS,AND,TIMES,DIVIDE,NOT,IF,ELSE,IDENTIFIER,BOOLEAN_LITERAL,INTEGER_LITERAL);
+        return list;
+    }
+
+    public static ArrayList<Lexical> isOperator() {
+        ArrayList<Lexical> list = new ArrayList<>();
+        Collections.addAll(list,PLUS,MINUS,TIMES,DIVIDE,AND,OR,EQUIVALENT,LESS_THAN);
         return list;
     }
 
@@ -164,6 +180,7 @@ public enum Lexical {
         return list;
     }
 
+// Applied rules of the parse table that get pushed on to the parse stack.
     public static ArrayList<Lexical> definitionRules() {
         ArrayList<Lexical> list = new ArrayList<>();
         Collections.addAll(list,MKFN,BODY,MKRETURNTYPE,TYPE,RETURN,RIGHT_PAREN,PARAMETERLIST,LEFT_PAREN,MKID,IDENTIFIER,FN);
@@ -314,6 +331,7 @@ public enum Lexical {
         return list;
     }
 
+// Parse stack values and their parse table rules that do not support them. 
     public static ArrayList<Lexical> definitionListError() {
         ArrayList<Lexical> list = new ArrayList<>();
         Collections.addAll(list,LEFT_PAREN,RIGHT_PAREN,RETURN,COMMA,COLON,INTEGER,BOOLEAN,EQUIVALENT,LESS_THAN,OR,PLUS,MINUS,AND,TIMES,DIVIDE,NOT,IF,ELSE,IDENTIFIER,BOOLEAN_LITERAL,INTEGER_LITERAL);
