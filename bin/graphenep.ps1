@@ -1,0 +1,1 @@
+﻿param($filename) java -jar src/graphenep.jar $filename "graphenep"
