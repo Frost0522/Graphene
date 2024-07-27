@@ -1,1 +1,0 @@
-param($filename) java -jar src/graphenes.jar $filename "graphenes"
