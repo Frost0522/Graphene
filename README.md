@@ -1,6 +1,6 @@
 ## Getting Started
 
-Welcome to the language of Graphene, a purely functional language based on the architecture that underlies Google's open source languge, Carbon.
+Welcome to Graphene, a purely functional language based on a small subset of Google's open source language, Carbon.
 
 ## Folder Structure
 
