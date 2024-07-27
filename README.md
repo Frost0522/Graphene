@@ -19,10 +19,8 @@ In a terminal, navigate to the source directory and run the build command. Once 
 
 - `build -c /path_to_program/program_name'  : runs the most recently compiled source code
 - `build -gs /path_to_program/program_name' : 'graphenes' runs code for the scanner and outputs all tokens
-- `build -gf /path_to_program/program_name' : 'graphenef' executes the parser, before node implementation, and either throws 
-                                              an error or outputs true if the program is valid
-- `build -gp /path_to_program/program_name' : 'graphenep' is the parser, after node implementation, that uses an object to print out 
-                                              the node stack
+- `build -gf /path_to_program/program_name' : 'graphenef' executes the parser, before node implementation, and either throws an error or outputs true if the program is valid
+- `build -gp /path_to_program/program_name' : 'graphenep' is the parser, after node implementation, that uses an object to print out the node stack
 
 ## To-Do
 
@@ -31,6 +29,11 @@ In a terminal, navigate to the source directory and run the build command. Once 
 > `Parser error handling` : Revist the parser to properly implement errors that will need to be caught at this stage.
 
 > `Next stage for parsing` : Modify table-driven parser to produce abstract syntax tree.
+
+`Downsizing` : I would like to go back and visit the way nodes are implemented to lessen the number of class files. This can also be said for the way that states are implemented in the scanner.
+
+`Visitor Pattern` : The object used to print out the node stack could use a bit of a touch up as well, it works fine, but does not follow the pattern I initally set out to use.
+
 
 ## Bug Fixes / Updates
 
