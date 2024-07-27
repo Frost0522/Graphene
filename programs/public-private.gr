@@ -1,0 +1,43 @@
+// Eugene Wallingford 2013-1203
+// 
+// This program demonstrates how we can factor large numbers
+// that are the products of large primes.  This is one way
+// in which public-key cryptography can work.
+// 
+// http://en.wikipedia.org/wiki/Public-key_cryptography
+
+fn main(publicKey : integer, privateKey : integer) -> integer
+   if (publicKey == 0)           // as a flag for no arguments
+      factor(2147481647,         // public key
+             2047483747)         // private key
+   else
+      factor(publicKey, privateKey)
+
+// gcd(publicKey, privateKey) should work, even if
+// you have a small stack space and no optimization!
+
+fn factor(publicKey : integer, privateKey : integer) -> integer
+   displayAndPrint(publicKey,
+                   privateKey,
+                   gcd(publicKey, privateKey))
+
+fn displayAndPrint(publicKey    : integer,
+                   privateKey   : integer,
+                   commonFactor : integer) -> integer
+   print(publicKey  / commonFactor)
+   print(privateKey / commonFactor)
+   commonFactor
+
+// finds the greatest common divisor using Euclid's algorithm
+
+fn gcd(a : integer, b : integer) -> integer
+   if (b == 0)
+      a
+   else
+      gcd(b, remainder(a, b))
+
+fn remainder(a : integer, b : integer) -> integer
+   if (a < b)
+      a
+   else
+      remainder(a-b, b)

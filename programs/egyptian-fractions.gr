@@ -1,0 +1,27 @@
+// https://blog.plover.com/math/egyptian-fractions.html
+// file:///Users/wallingf/home/teaching/cs4550/web/sessions/session10.html
+//
+// At one point in their history, the Egyptians did not have a general way
+// of writing fractions as m/n.  Instead, they wrote such fractions as the
+// sums of unit fractions 1/n, for different n.  For example, they could
+// write 3/5 as 1/2 + 1/10, which we can abbreviate as [2, 10]. 4/9 could
+// be written as 1/3 + 1/9, or [3, 9].
+
+fn main(m : integer, n : integer) -> integer
+   if (m == 1)
+      n
+   else if (MOD(n, m) == 0)
+      n/m
+   else
+      print_and_continue(m, n, n/m + 1)
+
+// print the unit fraction found, then compute the fraction for m/n - 1/unit
+
+fn print_and_continue(m : integer, n : integer, unit : integer) -> integer
+   print(unit)
+   main((unit * m) - n, n * unit)
+
+// this is a library function in Graphene
+
+fn MOD(m : integer, n : integer) -> integer
+   m - m/n * n

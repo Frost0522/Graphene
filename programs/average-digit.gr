@@ -1,0 +1,17 @@
+fn main(n : integer) -> integer
+   average_digit(n, 0, 0)
+
+fn average_digit(n : integer, sum : integer, i : integer) -> integer
+   if (n < 10)
+      print_and_return(sum+n, i+1)
+   else
+      average_digit(n/10, sum+MOD(n,10), i+1)
+
+fn print_and_return(sum : integer, n : integer) -> integer
+   print(sum/n)
+   print(MOD(sum,n))
+   n
+
+// from the Graphene library
+fn MOD(m : integer, n : integer) -> integer
+   m - m/n * n
