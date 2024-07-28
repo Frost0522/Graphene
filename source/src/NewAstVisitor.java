@@ -114,11 +114,11 @@ class LitNode extends NewNode {
         for (int _int : getCharList()) {builder.append((char) _int);}
         if (getType().equals(Lexicon.INTEGERLITERAL)) {
             if (literal.getSymbol().equals(Lexicon.MINUS)) {
-                return "(neg) integer_literal "+builder;
+                return "(neg) integer literal "+builder;
             }
-            return "integer_literal "+builder;
+            return "integer literal "+builder;
         }
-        return "boolean_literal "+builder;
+        return "boolean literal "+builder;
     }
 
     protected int[] position() {return new int[]{literal.line,literal.column};}
