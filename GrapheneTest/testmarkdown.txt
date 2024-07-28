@@ -1,7 +1,0 @@
-Root
-    LeftChild
-        LeftLeftChild
-        LeftRightChild
-    RightChild
-        RightLeftChild
-        RightRightChild
