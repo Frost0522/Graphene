@@ -23,7 +23,7 @@ if (-not ($c -or $p -or $t -or $gs -or $gf -or $gp)) {
 switch ($true) {
     {$c} {
         if (-not $file) {Write-Host "A positional argument for a Graphene file name must be provided."; exit 1}
-        java -jar ../bin/src/current.jar $file "graphenep"; break;
+        java -jar ../bin/src/current.jar $file "graphenev"; break;
         }
     {$p} {Get-ChildItem ../programs *.gr | ForEach-Object {
         if ($file) {Write-Host "No positional argument for a Graphene file is required."; exit 1}
