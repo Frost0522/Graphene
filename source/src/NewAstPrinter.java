@@ -1,101 +1,78 @@
 package src;
-import src.NewNode.Lineage;
 
 public class NewAstPrinter implements NewAstVisitor {
 
     private StringBuilder astStr = new StringBuilder();
-    private int strDepth = 0;
-    private String updateDepth(int depth, String str) {
-        StringBuilder builder = new StringBuilder();
-        for (int i = depth; i!=0; i--) {builder.append(" ");}
-        return builder.append(str).toString();
+    private int depth = 0;
+    private void formatStr() {
+        for (int i = 0; i < depth; i++) {
+            astStr.append("   ");
+        }
     }
 
     public String toString() {return astStr.toString();}
 
     @Override
     public void visit(IdNode idNode) {
-        astStr.append(updateDepth(strDepth,idNode.toString()));
+        astStr.append(idNode);
     }
 
     @Override
     public void visit(LitNode litNode) {
-        astStr.append(updateDepth(strDepth,litNode.toString()));
+        astStr.append(litNode);
     }
 
     @Override
     public void visit(BinaryNode binNode) {
-        if (binNode.lineage==Lineage.root) {
-            astStr.append(updateDepth(strDepth,"operator ")+binNode.getSymbol()+"\n");
-            if (binNode.getLeft() instanceof BinaryNode) {binNode.getLeft().accept(this);}
-            else {astStr.append(updateDepth(strDepth+=3,"left "+binNode.getLeft()+"\n"));}
-            if (binNode.getRight() instanceof BinaryNode) {binNode.getRight().accept(this);}
-            else {astStr.append(updateDepth(strDepth,"right "+binNode.getRight()));}
-            strDepth-=3;
+
+        if (depth < 1) {
+            depth++; formatStr();
+            astStr.append("operator "+binNode.getSymbol()+"\n");
         }
-        else if ((binNode.lineage==Lineage.left) && binNode.getLeft() instanceof BinaryNode) {
-            astStr.append(updateDepth(strDepth+=3,"left operator ")+binNode.getSymbol()+"\n");
+        else {depth--; astStr.append("operator "+binNode.getSymbol()+"\n");}
+
+        depth++; depth++; formatStr();
+        if (binNode.getLeft() != null) {
+            astStr.append("left "); 
             binNode.getLeft().accept(this);
-            if (binNode.getRight() instanceof BinaryNode) {binNode.getRight().accept(this);}
-            else {astStr.append(updateDepth(strDepth,"right "+binNode.getRight())+"\n");}
+            astStr.append("\n");
         }
-        else if (binNode.lineage==Lineage.left && (!(binNode.getLeft() instanceof BinaryNode))) {
-            astStr.append(updateDepth(strDepth+=3,"left operator ")+binNode.getSymbol()+"\n");
-            astStr.append(updateDepth(strDepth+=3,"left "+binNode.getLeft())+"\n");
-            if (binNode.getRight() instanceof BinaryNode) {binNode.getRight().accept(this);}
-            else {astStr.append(updateDepth(strDepth,"right "+binNode.getRight())+"\n");}
-            strDepth-=3;
+        depth--;
+
+        depth++; formatStr();
+        if (binNode.getRight() != null) {
+            astStr.append("right "); 
+            binNode.getRight().accept(this);
+            astStr.append("\n");
         }
-        else if ((binNode.lineage==Lineage.right) && binNode.getLeft() instanceof BinaryNode) {
-            astStr.append(updateDepth(strDepth,"right operator ")+binNode.getSymbol()+"\n");
-            binNode.getLeft().accept(this);
-            if (binNode.getRight() instanceof BinaryNode) {binNode.getRight().accept(this);}
-            else {astStr.append(updateDepth(strDepth,"right "+binNode.getRight()+"\n"));}
-        }
-        else if (binNode.lineage==Lineage.right && (!(binNode.getLeft() instanceof BinaryNode))) {
-            astStr.append(updateDepth(strDepth,"right operator ")+binNode.getSymbol()+"\n");
-            astStr.append(updateDepth(strDepth+=3,"left "+binNode.getLeft()+"\n"));
-            if (binNode.getRight() instanceof BinaryNode) {binNode.getRight().accept(this);}
-            else {astStr.append(updateDepth(strDepth,"right "+binNode.getRight())+"\n");}
-            strDepth-=3;
-        }
+        depth--;
     }
 
     @Override
     public void visit(CallNode callNode) {
-        astStr.append(updateDepth(strDepth, "function call\n"));
-        strDepth += 3;
-        astStr.append(updateDepth(strDepth, callNode.getId().toString()+"\n"));
-        astStr.append(updateDepth(strDepth, "args\n"));
-        strDepth += 3;
-        for (NewNode argNode : callNode.getArgs()) {
-            argNode.accept(this);
-            if (argNode!=callNode.getArgs().getLast()) {
-                astStr.append("\n");
+        if (depth < 1) {
+            depth++; formatStr();
+            astStr.append(callNode);
+        }
+        else {
+            depth--; astStr.append("function call\n");
+            depth++; depth++;
+            formatStr(); astStr.append(callNode.getId()+"\n");
+            formatStr(); astStr.append("args\n");
+            depth++;
+            for (NewNode arg : callNode.getArgs()) {
+                formatStr(); arg.accept(this); astStr.append("\n");
             }
         }
-        strDepth -= 6;
     }
 
     @Override
     public void visit(IfNode ifNode) {
-        astStr.append(updateDepth(strDepth, "if\n"));
-        strDepth += 3;
-        ifNode.getIf().accept(this);
-        strDepth -=3;
-        astStr.append("\n"+updateDepth(strDepth, "then\n"));
-        strDepth += 3;
-        ifNode.getThen().accept(this);
-        strDepth -=3;
-        astStr.append("\n"+updateDepth(strDepth, "else\n"));
-        strDepth += 3;
-        ifNode.getElse().accept(this);
-        strDepth -=3;
+        
     }
 
     @Override
     public void visit(FnNode fnNode) {
-        strDepth = 6;
         astStr.append(fnNode);
         for (NewNode bodyNode : fnNode.getBodyNodes()) {
             bodyNode.accept(this);
@@ -105,15 +82,12 @@ public class NewAstPrinter implements NewAstVisitor {
     @Override
     public void visit(PrgrmNode prgrmNode) {
         for (NewNode fnNode : prgrmNode.getFunctions()) {
-            fnNode.accept(this); astStr.append("\n\n");
+            fnNode.accept(this);
         }
     }
 
     @Override
     public void visit(ExpNode expNode) {
-        astStr.append(updateDepth(strDepth, "expression\n"));
-        strDepth += 3;
-        expNode.getNode().accept(this);
-        strDepth -= 3;
+        
     }
 }

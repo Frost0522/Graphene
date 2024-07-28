@@ -6,8 +6,6 @@ abstract class NewNode {
     abstract void accept(NewAstVisitor visitor);
     abstract Lexicon nodeType();
     abstract int[] position();
-    protected Lineage lineage = Lineage.root;
-    protected enum Lineage {left,right,root}
 }
 
 public interface NewAstVisitor {
@@ -170,7 +168,7 @@ class FnNode extends NewNode {
     }
     public String toString() {
         return "funcion\n   "+id+"\n   parameters "+getParameters()+
-               "\n   "+type+"\n   body\n";
+               "\n   "+type+"\n   body\n   ";
             }
 
     protected NewNode getIdNode() {return id;}
@@ -204,7 +202,7 @@ class CallNode extends NewNode {
         while (!(node instanceof NullNode)) {args.add(0,node); node = stack.pop();}
         id = stack.pop();
     }
-    public String toString() {return "function_call\n         "+id+"\n         args\n";}
+    public String toString() {return "function call\n         "+id+"\n         args\n";}
 
     protected NewNode getId() {return id;}
     protected ArrayList<NewNode> getArgs() {return args;}
@@ -304,8 +302,6 @@ class BinaryNode extends NewNode {
     protected NewNode getLeft() {return leftNode;}
     protected NewNode getRight() {return rightNode;}
     protected void accept(NewAstVisitor visitor) {
-        leftNode.lineage = Lineage.left;
-        rightNode.lineage = Lineage.right;
         visitor.visit(this);
     }
     protected Lexicon nodeType() {return nodeType;}
