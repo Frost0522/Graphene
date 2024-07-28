@@ -39,7 +39,7 @@ public class Main {
                 System.out.println(new AstPrinter(parser.nStack));
                 break;
             }
-            case "graphenev" : {
+            case "graphenev": {
                 Scanner scanner = new Scanner(pushReader);
                 NewParser parser = new NewParser(scanner);
                 NewAstPrinter astPrinter = new NewAstPrinter();
