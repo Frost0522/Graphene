@@ -11,7 +11,7 @@ The workspace contains multiple folders by default, where:
 - `programs`   : .gr files containing various examples of Graphene code.
 - `source`     : contains build scripts for Windows and Linux.
 - `source\src` : where source code is located.
-- `tests`      : various Graphene test code used in debugging.
+- `tests`      : various Graphene test code used in debugging. 
 
 ## How to build Graphene
 
