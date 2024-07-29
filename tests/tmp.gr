@@ -1,1 +1,1 @@
-fn main(a:integer,b:boolean) -> boolean a + b - c + t(1,2,a(b))
+fn main(a:integer,b:boolean) -> boolean if(a) a else if(1<2) 1 else if(b) (c - 1) else t(1,2,3)

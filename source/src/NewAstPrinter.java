@@ -10,7 +10,9 @@ public class NewAstPrinter implements NewAstVisitor {
         }
     }
 
-    public String toString() {return astStr.toString();}
+    public String toString() {
+        return astStr.toString().trim().indent(1);
+    }
 
     @Override
     public void visit(IdNode idNode) {
@@ -43,7 +45,6 @@ public class NewAstPrinter implements NewAstVisitor {
         if (binNode.getRight() != null) {
             astStr.append("right "); 
             binNode.getRight().accept(this);
-            astStr.append("\n");
         }
         depth--;
     }
@@ -68,7 +69,42 @@ public class NewAstPrinter implements NewAstVisitor {
 
     @Override
     public void visit(IfNode ifNode) {
+
+        if (depth < 1) {
+            depth++; formatStr();
+            astStr.append("if\n");
+            depth++; depth++; formatStr();
+            ifNode.getIf().accept(this);
         
+            astStr.append("\n");
+            depth--; formatStr();
+            astStr.append("then\n");
+            depth++; formatStr();
+            ifNode.getThen().accept(this);
+            astStr.append("\n");
+
+            depth--; formatStr();
+            astStr.append("else\n");
+            depth++; formatStr();
+            ifNode.getElse().accept(this);
+        }
+        else {
+            astStr.append("if\n");
+            depth++; formatStr();
+            ifNode.getIf().accept(this);
+
+            astStr.append("\n");
+            depth--; formatStr();
+            astStr.append("then\n");
+            depth++; formatStr();
+            ifNode.getThen().accept(this);
+
+            astStr.append("\n");
+            depth--; formatStr();
+            astStr.append("else\n");
+            depth++; formatStr();
+            ifNode.getElse().accept(this);
+        }
     }
 
     @Override
@@ -88,6 +124,9 @@ public class NewAstPrinter implements NewAstVisitor {
 
     @Override
     public void visit(ExpNode expNode) {
-        
+        astStr.append("expression\n");
+        depth++; formatStr();
+        expNode.getNode().accept(this);
+        depth--;
     }
 }
