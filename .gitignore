@@ -1,9 +1,10 @@
 # Ignore config files
-./.vscode
+vscode
 
 #Ignore Java class files in bin/src directory
-./bin/src/*.class
-./bin/src/current.jar
+bin/src/*.class
+bin/src/current.jar
 
 #Ignore specific test file used for debugging
-./tests/tmp.gr
+tests/tmp.gr
+bin/src/current.jar
