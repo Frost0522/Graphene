@@ -9,17 +9,28 @@ public class NewAstPrinter implements NewAstVisitor {
             astStr.append("   ");
         }
     }
+    private String formatStr(String string) {
+        StringBuilder builder = new StringBuilder();
+        String[] strArray = string.split("\n");
+        for (String str : strArray) {
+            for (int _int = 0; _int < depth; _int++) {
+                str = "   "+str;
+            }
+            builder.append(str+"\n");
+        }
+        return builder.toString();
+    }
 
     public String toString() {return astStr.toString();}
 
     @Override
     public void visit(IdNode idNode) {
-        astStr.append(idNode);
+        astStr.append(formatStr(idNode.toString()));
     }
 
     @Override
     public void visit(LitNode litNode) {
-        astStr.append(litNode);
+        astStr.append(formatStr(litNode.toString()));
     }
 
     @Override
@@ -50,20 +61,14 @@ public class NewAstPrinter implements NewAstVisitor {
 
     @Override
     public void visit(CallNode callNode) {
-        if (depth < 1) {
-            depth++; formatStr();
-            astStr.append(callNode);
+        if (depth < 1) {depth+=2;}
+        String formatedCallNode = formatStr(callNode.toString());
+        astStr.append(formatedCallNode);
+        depth+=2;
+        for (NewNode arg : callNode.getArgs()) {
+            arg.accept(this);
         }
-        else {
-            depth--; astStr.append("function call\n");
-            depth++; depth++;
-            formatStr(); astStr.append(callNode.getId()+"\n");
-            formatStr(); astStr.append("args\n");
-            depth++;
-            for (NewNode arg : callNode.getArgs()) {
-                formatStr(); arg.accept(this); astStr.append("\n");
-            }
-        }
+        depth=0;
     }
 
     @Override

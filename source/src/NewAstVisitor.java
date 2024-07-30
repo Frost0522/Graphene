@@ -168,7 +168,7 @@ class FnNode extends NewNode {
     }
     public String toString() {
         return "funcion\n   "+id+"\n   parameters "+getParameters()+
-               "\n   "+type+"\n   body\n   ";
+               "\n   "+type+"\n   body\n";
             }
 
     protected NewNode getIdNode() {return id;}
@@ -202,7 +202,7 @@ class CallNode extends NewNode {
         while (!(node instanceof NullNode)) {args.add(0,node); node = stack.pop();}
         id = stack.pop();
     }
-    public String toString() {return "function call\n         "+id+"\n         args\n";}
+    public String toString() {return "function call"+"\n   "+id+"\n   "+"args";}
 
     protected NewNode getId() {return id;}
     protected ArrayList<NewNode> getArgs() {return args;}
