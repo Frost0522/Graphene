@@ -1,5 +1,5 @@
 # Ignore config files
-vscode
+.vscode
 
 #Ignore Java class files in bin/src directory
 bin/src/*.class
