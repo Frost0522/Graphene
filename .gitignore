@@ -6,5 +6,5 @@ bin/src/*.class
 bin/src/current.jar
 
 #Ignore specific test file used for debugging
-tests/tmp.gr
+tests/tmp
 bin/src/current.jar
