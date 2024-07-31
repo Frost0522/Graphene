@@ -169,7 +169,7 @@ class FnNode extends NewNode {
     public String toString() {
         return "funcion\n   "+id+"\n   parameters "+getParameters()+
                "\n   "+type+"\n   body\n";
-            }
+    }
 
     protected NewNode getIdNode() {return id;}
     protected NewNode getNodeType() {return type;}
@@ -206,7 +206,6 @@ class CallNode extends NewNode {
 
     protected NewNode getId() {return id;}
     protected ArrayList<NewNode> getArgs() {return args;}
-    protected void setArgs(ArrayList<NewNode> list) {for (NewNode n : list) {args.add(0,n);}}
     protected int[] position() {return id.position();}
     protected void accept(NewAstVisitor visitor) {
         visitor.visit(this);
@@ -288,16 +287,16 @@ class BinaryNode extends NewNode {
 
     private NewNode leftNode;
     private NewNode rightNode;
-    private String symbol;
+    private String operator;
     private Lexicon nodeType;
 
     public BinaryNode(Stack<NewNode> stack, String s, Lexicon type) {
-        this.rightNode = stack.pop(); this.leftNode = stack.pop(); 
-        this.symbol = s; nodeType = type;
+        this.rightNode = stack.pop(); this.leftNode = stack.pop();
+        this.operator = s; nodeType = type;
     }
-    public String toString() {return leftNode+" "+symbol+" "+rightNode;}
+    public String toString() {return "operator "+operator+"\n"+"left "+leftNode+"\n"+"right "+rightNode+"\n";}
 
-    protected String getSymbol() {return symbol;}
+    protected String getSymbol() {return operator;}
     protected int[] position() {return leftNode.position();}
     protected NewNode getLeft() {return leftNode;}
     protected NewNode getRight() {return rightNode;}
