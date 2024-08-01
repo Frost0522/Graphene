@@ -30,9 +30,13 @@ In a terminal, navigate to the source directory and run the build command. Once 
 
 > `Next stage for parsing` : Modify table-driven parser to produce abstract syntax tree.
 
-`Downsizing` : I would like to go back and visit the way nodes are implemented to lessen the number of class files. This can also be said for the way that states are implemented in the scanner.
+> `Downsizing` : I would like to go back and visit the way nodes are implemented to lessen the number of class files. This can also be said for the way that states are implemented in the scanner.
 
-`Visitor Pattern` : The object used to print out the node stack could use a bit of a touch up as well, it works fine, but does not follow the pattern I initally set out to use.
+> `Visitor Pattern` : The object used to print out the node stack could use a bit of a touch up as well, it works fine, but does not follow the pattern I initally set out to use.
+
+`Updating the analzyer` : With all of the changes to the parser, nodes, and node printer, I need to make sure the Analyzer is maintained and still well enough to handle all parsing errors.
+
+`Semantic Analysis` : Now with sytax out of the way I can finally begin working on the semantics.
 
 
 ## Bug Fixes / Updates
