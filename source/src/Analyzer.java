@@ -202,25 +202,7 @@ public class Analyzer extends Exception {
 
     // Error handling for making nodes in the parser.
     public Analyzer(Lexicon opType, Lexicon errorType, Node errorNode) throws Analyzer {
-
-        if (errorType.equals(Lexicon.ID)) {
-            throw new Analyzer("Line "+errorNode.getId().line+" Column "+errorNode.getId().column+"\nParsing Error: Illegal use of primitive '"+
-                               String.format(errorNode.getId().getName().toString().replace("name ","")+"' in operation '"+
-                               opType.toString().toLowerCase())+"'.\n");
-                               
-        }
-        else if (errorType.equals(Lexicon.FNCALL)) {
-            throw new Analyzer("Line "+errorNode.getFnCall().getId().line+" Column "+errorNode.getFnCall().getId().column+
-                               "\nParsing Error: Illegal use of primitive '"+
-                               String.format(errorNode.getFnCall().getId().getName().toString().replace("name ","")+"' in operation '"+
-                               opType.toString().toLowerCase())+"'.\n");
-        }
-        else if (errorType.equals(Lexicon.IF)) {
-            throw new Analyzer("Line "+errorNode.getIfState().line+" Column "+errorNode.getIfState().column+
-                               "\nParsing Error: Illegal use of primitive 'if' in operation '"+
-                               opType.toString().toLowerCase()+"'.\n");
-        }
-        throw new Analyzer("Fatal error has occured.");
+        throw new Analyzer("Parsing error!"); 
     }
 
 // Error handling for the semantic checker.

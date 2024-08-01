@@ -36,13 +36,15 @@ public class Main {
             case "graphenep": {
                 Scanner scanner = new Scanner(pushReader);
                 Parser parser = new Parser(scanner);
-                System.out.println(new AstPrinter(parser.nStack));
+                AstPrinter astPrinter = new AstPrinter();
+                parser.nStack.pop().accept(astPrinter);
+                System.out.println(astPrinter);
                 break;
             }
             case "graphenev": {
                 Scanner scanner = new Scanner(pushReader);
-                NewParser parser = new NewParser(scanner);
-                NewAstPrinter astPrinter = new NewAstPrinter();
+                Parser parser = new Parser(scanner);
+                AstPrinter astPrinter = new AstPrinter();
                 parser.nStack.pop().accept(astPrinter);
                 System.out.println(astPrinter);
                 break;

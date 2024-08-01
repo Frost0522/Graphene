@@ -1,197 +1,132 @@
 package src;
-import java.util.Stack;
 
-public class AstPrinter {
+public class AstPrinter implements AstVisitor {
 
-    private StringBuilder astString = new StringBuilder();
-    private Stack<Node> helperStack = new Stack<>();
-    private Stack<Node> nStack = new Stack<>();
-    private int strDepth;
-
-    public AstPrinter(Stack<Node> stack) {
-        nStack = stack;
-    }
-
-    public String toString() {
-
-        while (!nStack.empty()) {
-
-            Node node = nStack.pop();
-            switch (node.valueOf()) {
-                case PROGRAM: {
-                    if (node.getProgram().getFunctions().isEmpty()) {return "";}
-                    int size = node.getProgram().getFunctions().size()-1;
-                    for (int dex = size; dex >= 0; dex--) {
-                        nStack.push(node.getProgram().getFunctions().get(dex));
-                    }
-                    break;
-                }
-                case FN: {
-                    strDepth = 6;
-                    astString.append("\n");
-                    astString.append("function\n   "+node.getFn().getName()+"\n   parameters "+
-                    node.getFn().getParameters()+"\n   "+node.getFn().getNodeType().getType()+"\n   body\n");
-                    int size = node.getFn().getBodyNodes().size()-1;
-                    for (int dex = size; dex >= 0; dex--) {
-                        nStack.push(node.getFn().getBodyNodes().remove(dex));
-                    }
-                    break;
-                }
-                case FNCALL: {
-                    nStack.push(new Node());
-                    String fnName = node.getFnCall().getName().toString().replace("identifier ", "");
-                    if (node.getFnCall().getId().isNegative()) {
-                        astString.append(formatStr(strDepth, "(neg) function_call "+"\n   "+fnName+"\n   "+"args"));
-                    }
-                    else {astString.append(formatStr(strDepth, "function_call "+"\n   "+fnName+"\n   "+"args"));}
-                    int size = node.getFnCall().getArgs().size()-1;
-                    for (int dex = size; dex >= 0; dex--) {
-                        nStack.push(node.getFnCall().getArgs().remove(dex));
-                    }
-                    strDepth += 6;
-                    break;
-                }
-                case EXP: {
-                    if (node.getExp().symbol==Lexicon.MINUS) {
-                        astString.append(formatStr(strDepth, "(neg) expression"));
-                    }
-                    else {astString.append(formatStr(strDepth, "expression"));}
-                    strDepth += 3;
-                    helperStack.push(node.getExp().getNode());
-                    astString.append(formatStr(strDepth, new AstPrinter(helperStack).toString()));
-                    strDepth -= 3;
-                    break;
-                }
-                case IF: {
-                    astString.append(formatStr(strDepth, "if"));
-                    strDepth += 3;
-                    helperStack.push(node.getIfState().getIf());
-                    astString.append(formatStr(strDepth, new AstPrinter(helperStack).toString()));
-                    strDepth -= 3;
-                    astString.append(formatStr(strDepth, "then"));
-                    strDepth += 3;
-                    helperStack.push(node.getIfState().getThen());
-                    astString.append(formatStr(strDepth, new AstPrinter(helperStack).toString()));
-                    strDepth -= 3;
-                    astString.append(formatStr(strDepth, "else"));
-                    strDepth += 3;
-                    helperStack.push(node.getIfState().getElse());
-                    astString.append(formatStr(strDepth, new AstPrinter(helperStack).toString()));
-                    strDepth -= 3;
-                    break;
-                }
-                case DIVIDE: {
-                    astString.append(formatStr(strDepth, "operator /"));
-                    strDepth += 3;
-                    helperStack.push(node.getDivide().getLeftNode());
-                    astString.append(formatStr(strDepth, "left "+new AstPrinter(helperStack)));
-                    helperStack.push(node.getDivide().getRightNode());
-                    astString.append(formatStr(strDepth, "right "+new AstPrinter(helperStack)));
-                    helperStack = new Stack<>();
-                    strDepth -= 3;
-                    break;
-                }
-                case MINUS: {
-                    astString.append(formatStr(strDepth, "operator -"));
-                    strDepth += 3;
-                    helperStack.push(node.getMinus().getLeftNode());
-                    astString.append(formatStr(strDepth, "left "+new AstPrinter(helperStack)));
-                    helperStack.push(node.getMinus().getRightNode());
-                    astString.append(formatStr(strDepth, "right "+new AstPrinter(helperStack)));
-                    strDepth -= 3;
-                    helperStack = new Stack<>();
-                    break;
-                }
-                case PLUS: {
-                    astString.append(formatStr(strDepth, "operator +"));
-                    strDepth += 3;
-                    helperStack.push(node.getPlus().getLeftNode());
-                    astString.append(formatStr(strDepth, "left "+new AstPrinter(helperStack)));
-                    helperStack.push(node.getPlus().getRightNode());
-                    astString.append(formatStr(strDepth, "right "+new AstPrinter(helperStack)));
-                    helperStack = new Stack<>();
-                    strDepth -= 3;
-                    break;
-                }
-                case TIMES: {
-                    astString.append(formatStr(strDepth, "operator *"));
-                    strDepth += 3;
-                    helperStack.push(node.getTimes().getLeftNode());
-                    astString.append(formatStr(strDepth, "left "+new AstPrinter(helperStack)));
-                    helperStack.push(node.getTimes().getRightNode());
-                    astString.append(formatStr(strDepth, "right "+new AstPrinter(helperStack)));
-                    helperStack = new Stack<>();
-                    strDepth -= 3;
-                    break;
-                }
-                case EQUIVALENT: {
-                    astString.append(formatStr(strDepth, "operator =="));
-                    strDepth += 3;
-                    helperStack.push(node.getEquality().getLeftNode());
-                    astString.append(formatStr(strDepth, "left "+new AstPrinter(helperStack)));
-                    helperStack.push(node.getEquality().getRightNode());
-                    astString.append(formatStr(strDepth, "right "+new AstPrinter(helperStack)));
-                    helperStack = new Stack<>();
-                    strDepth -= 3;
-                    break;
-                }
-                case OR: {
-                    astString.append(formatStr(strDepth, "operator or"));
-                    strDepth += 3;
-                    helperStack.push(node.getOr().getLeftNode());
-                    astString.append(formatStr(strDepth, "left "+new AstPrinter(helperStack)));
-                    helperStack.push(node.getOr().getRightNode());
-                    astString.append(formatStr(strDepth, "right "+new AstPrinter(helperStack)));
-                    helperStack = new Stack<>();
-                    strDepth -= 3;
-                    break;
-                }
-                case AND: {
-                    astString.append(formatStr(strDepth, "operator and"));
-                    strDepth += 3;
-                    helperStack.push(node.getAnd().getLeftNode());
-                    astString.append(formatStr(strDepth, "left "+new AstPrinter(helperStack)));
-                    helperStack.push(node.getAnd().getRightNode());
-                    astString.append(formatStr(strDepth, "right "+new AstPrinter(helperStack)));
-                    helperStack = new Stack<>();
-                    strDepth -= 3;
-                    break;
-                }
-                case LESSTHAN: {
-                    astString.append(formatStr(strDepth, "operator <"));
-                    strDepth += 3;
-                    helperStack.push(node.getLessThan().getLeftNode());
-                    astString.append(formatStr(strDepth, "left "+new AstPrinter(helperStack)));
-                    helperStack.push(node.getLessThan().getRightNode());
-                    astString.append(formatStr(strDepth, "right "+new AstPrinter(helperStack)));
-                    helperStack = new Stack<>();
-                    strDepth -= 3;
-                    break;
-                }
-                case ID: {
-                    astString.append(formatStr(strDepth, node.getId().toString()));
-                    break;
-                }
-                case LITERAL: {
-                    astString.append(formatStr(strDepth, node.getLiteral().toString()));
-                    break;
-                }
-                case $: {strDepth -= 6;}
-                default: {break;}
-            }
-        }
-        return astString.toString();
-    }
-
-    private String formatStr(int space, String string) {
+    private StringBuilder astStr = new StringBuilder();
+    private int depth = 0;
+    private Boolean formatSwitch = true;
+    private String formatStr(String string) {
+        if (!formatSwitch) {formatSwitch = true; return string;}
         StringBuilder builder = new StringBuilder();
         String[] strArray = string.split("\n");
         for (String str : strArray) {
-            for (int _int = 0; _int < space; _int++) {
-                str = " "+str;
+            for (int i = 0; i < depth; i++) {
+                str = "   "+str;
             }
             builder.append(str+"\n");
         }
         return builder.toString();
+    }
+    private String formatStr(String string, Boolean newLine) {
+        if (!formatSwitch) {formatSwitch = true; return string;}
+        if (newLine) {formatStr(string);}
+        StringBuilder builder = new StringBuilder();
+        String[] strArray = string.split("\n");
+        for (String str : strArray) {
+            for (int i = 0; i < depth; i++) {
+                str = "   "+str;
+            }
+            builder.append(str+"\n");
+        }
+        String subStr = builder.toString().substring(0,builder.toString().length()-1);
+        return subStr;
+    }
+
+    public String toString() {
+        return astStr.toString().trim();
+    }
+
+    @Override
+    public void visit(IdNode idNode) {
+        if (depth==0) {depth=2;}
+        astStr.append(formatStr(idNode.toString(),false));
+    }
+
+    @Override
+    public void visit(LitNode litNode) {
+        if (depth==0) {depth=2;}
+        astStr.append(formatStr(litNode.toString(),false));
+    }
+
+    @Override
+    public void visit(BinaryNode binNode) {
+
+        if (depth < 2) {
+            depth+=2;
+            astStr.append(formatStr("operator "+binNode.getSymbol()));
+        }
+        else {astStr.append(formatStr("operator ",false)+binNode.getSymbol()+"\n");}
+        depth++;
+        if (binNode.getLeft() != null) {
+            astStr.append(formatStr("left ",false));
+            formatSwitch = false;
+            binNode.getLeft().accept(this);
+            astStr.append("\n");
+        }
+
+        if (binNode.getRight() != null) {
+            astStr.append(formatStr("right ",false));
+            formatSwitch = false;
+            binNode.getRight().accept(this);
+        }
+        depth--;
+    }
+
+    @Override
+    public void visit(CallNode callNode) {
+        if (depth < 2) {
+            depth+=2;
+            astStr.append(formatStr(callNode.toString()));
+        }
+        else {
+            astStr.append(formatStr("function call"+"\n"));
+            depth++;
+            astStr.append(formatStr(callNode.getId().toString()));
+            astStr.append(formatStr("args"));
+            depth--;
+        }
+        depth+=2;
+        for (Node arg : callNode.getArgs()) {
+            arg.accept(this);
+            if (!(arg==callNode.getArgs().getLast())) {astStr.append("\n");}
+        }
+        depth-=2;
+
+    }
+
+    @Override
+    public void visit(IfNode ifNode) {
+        if (depth < 2) {
+            depth+=2;
+            astStr.append(formatStr("if"));
+        }
+        else {astStr.append(formatStr("if"));}
+        depth++; ifNode.getIf().accept(this); depth--;
+        astStr.append(formatStr("\nthen"));
+        depth++; ifNode.getThen().accept(this); depth--;
+        astStr.append(formatStr("\nelse"));
+        depth++; ifNode.getElse().accept(this); depth--;
+    }
+
+    @Override
+    public void visit(FnNode fnNode) {
+        astStr.append(fnNode);
+        for (Node bodyNode : fnNode.getBodyNodes()) {
+            bodyNode.accept(this); 
+            astStr.append("\n");
+        }
+    }
+
+    @Override
+    public void visit(PrgrmNode prgrmNode) {
+        for (Node fnNode : prgrmNode.getFunctions()) {
+            fnNode.accept(this); astStr.append("\n");
+        }
+    }
+
+    @Override
+    public void visit(ExpNode expNode) {
+        astStr.append(formatStr("expression\n"));
+        depth++; expNode.getNode().accept(this); depth--;
     }
 }
