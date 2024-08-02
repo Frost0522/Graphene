@@ -44,8 +44,11 @@ public class Main {
             case "graphenev": {
                 Scanner scanner = new Scanner(pushReader);
                 Parser parser = new Parser(scanner);
-                SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
-                parser.nStack.pop().accept(semanticAnalyzer);
+                AstPrinter astPrinter = new AstPrinter();
+                parser.nStack.pop().accept(astPrinter);
+                System.out.println(astPrinter);
+                // SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
+                // parser.nStack.pop().accept(semanticAnalyzer);
                 break;
             }
             default: {
