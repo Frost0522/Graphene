@@ -27,12 +27,12 @@ switch ($true) {
         }
     {$p} {Get-ChildItem ../programs *.gr | ForEach-Object {
         if ($file) {Write-Host "No positional argument for a Graphene file is required."; exit 1}
-            java -jar "../bin/src/current.jar" "../programs/$([System.IO.Path]::GetFileNameWithoutExtension($_))" "graphenep"
+            java -jar "../bin/src/current.jar" "../programs/$([System.IO.Path]::GetFileNameWithoutExtension($_))" "graphenev"
             }; break;
         }
     {$t} {Get-ChildItem ../tests *.gr | ForEach-Object {
         if ($file) {Write-Host "No positional argument for a Graphene file is required."; exit 1}
-            java -jar "../bin/src/current.jar" "../tests/$([System.IO.Path]::GetFileNameWithoutExtension($_))" "graphenep"
+            java -jar "../bin/src/current.jar" "../tests/$([System.IO.Path]::GetFileNameWithoutExtension($_))" "graphenev"
             }; break;
         }
     {$gs} {
