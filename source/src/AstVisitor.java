@@ -2,19 +2,13 @@ package src;
 import java.util.ArrayList;
 import java.util.Stack;
 
-abstract class Node {
-    abstract void accept(AstVisitor visitor);
-    abstract Lexicon nodeType();
-    abstract int[] position();
-}
-
 public interface AstVisitor {
     default public void visit(IdNode node) {}
     default public void visit(TypeNode node) {}
     default public void visit(ReturnNode node) {}
     default public void visit(LitNode node) {}
-    default public void visit(ParamNode node) {}
-    default public void visit(BinaryNode node) {}
+    default public void visit(ParamNode node) throws Analyzer {}
+    default public void visit(BinaryNode node) throws Analyzer {}
     default public void visit(EqNode node) {}
     default public void visit(MinusNode node) {}
     default public void visit(PlusNode node) {}
@@ -23,12 +17,19 @@ public interface AstVisitor {
     default public void visit(AndNode node) {}
     default public void visit(OrNode node) {}
     default public void visit(LessNode node) {}
-    default public void visit(FnNode node) {}
-    default public void visit(CallNode node) {}
-    default public void visit(IfNode node) {}
-    default public void visit(PrgrmNode node) {}
-    default public void visit(ExpNode node) {}
+    default public void visit(FnNode node) throws Analyzer {}
+    default public void visit(CallNode node) throws Analyzer {}
+    default public void visit(IfNode node) throws Analyzer {}
+    default public void visit(PrgrmNode node) throws Analyzer {}
+    default public void visit(ExpNode node) throws Analyzer {}
     default public void visit(NullNode node) {}
+}
+
+abstract class Node {
+    abstract void accept(AstVisitor visitor) throws Analyzer;
+    abstract Lexicon nodeType();
+    abstract int[] position();
+    protected Lexicon semanticType;
 }
 
 class NullNode extends Node {
@@ -67,7 +68,7 @@ class IdNode extends Node {
     protected String getName() {
         StringBuilder builder = new StringBuilder();
         for (int _int : getCharList()) {builder.append((char) _int);}
-        return "name "+builder;
+        return builder.toString();
     }
     protected void accept(AstVisitor visitor) {visitor.visit(this);}
     protected Lexicon nodeType() {return Lexicon.ID;}
@@ -149,7 +150,7 @@ class ParamNode extends Node {
     protected int[] position() {return id.position();}
     protected Node getLeft() {return id;}
     protected Node getRight() {return type;}
-    protected void accept(AstVisitor visitor) {visitor.visit(this);}
+    protected void accept(AstVisitor visitor) throws Analyzer {visitor.visit(this);}
     protected Lexicon nodeType() {return Lexicon.PARAMLIST;}
 }
 
@@ -184,7 +185,7 @@ class FnNode extends Node {
         return builder.toString();
     }
     protected int[] position() {return id.position();}
-    protected void accept(AstVisitor visitor) {
+    protected void accept(AstVisitor visitor) throws Analyzer {
         visitor.visit(this);
     }
     protected Lexicon nodeType() {
@@ -207,7 +208,7 @@ class CallNode extends Node {
     protected Node getId() {return id;}
     protected ArrayList<Node> getArgs() {return args;}
     protected int[] position() {return id.position();}
-    protected void accept(AstVisitor visitor) {
+    protected void accept(AstVisitor visitor) throws Analyzer {
         visitor.visit(this);
     }
     protected Lexicon nodeType() {
@@ -232,7 +233,7 @@ class IfNode extends Node {
     protected Node getThen() {return _then;}
     protected Node getElse() {return _else;}
     protected int[] position() {return _if.position();}
-    protected void accept(AstVisitor visitor) {
+    protected void accept(AstVisitor visitor) throws Analyzer {
         visitor.visit(this);
     }
     protected Lexicon nodeType() {
@@ -255,7 +256,7 @@ class PrgrmNode extends Node {
 
     protected ArrayList<Node> getFunctions() {return functionList;}
     protected int[] position() {return new int[]{0,0};}
-    protected void accept(AstVisitor visitor) {
+    protected void accept(AstVisitor visitor) throws Analyzer {
         visitor.visit(this);
     }
     protected Lexicon nodeType() {
@@ -275,7 +276,7 @@ class ExpNode extends Node {
 
     protected Node getNode() {return exp;}
     protected int[] position() {return new int[]{};}
-    protected void accept(AstVisitor visitor) {
+    protected void accept(AstVisitor visitor) throws Analyzer {
         visitor.visit(this);
     }
     protected Lexicon nodeType() {
@@ -300,7 +301,7 @@ class BinaryNode extends Node {
     protected int[] position() {return leftNode.position();}
     protected Node getLeft() {return leftNode;}
     protected Node getRight() {return rightNode;}
-    protected void accept(AstVisitor visitor) {
+    protected void accept(AstVisitor visitor) throws Analyzer {
         visitor.visit(this);
     }
     protected Lexicon nodeType() {return nodeType;}

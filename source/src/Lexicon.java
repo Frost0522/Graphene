@@ -21,7 +21,7 @@ public enum Lexicon {
     MKNEG, MKPLUS, MKEXP,
 
     //Error types for symantic analyzer
-    NAMECONFLICT;
+    PRIMITIVEFN, PRIMITIVEPARAM, NOMAIN;
 
     public int value() {
         switch (this) {

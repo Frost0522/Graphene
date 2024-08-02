@@ -49,7 +49,7 @@ public class AstPrinter implements AstVisitor {
     }
 
     @Override
-    public void visit(BinaryNode binNode) {
+    public void visit(BinaryNode binNode) throws Analyzer {
 
         if (depth < 2) {
             depth+=2;
@@ -73,7 +73,7 @@ public class AstPrinter implements AstVisitor {
     }
 
     @Override
-    public void visit(CallNode callNode) {
+    public void visit(CallNode callNode) throws Analyzer {
         if (depth < 2) {
             depth+=2;
             astStr.append(formatStr(callNode.toString()));
@@ -95,7 +95,7 @@ public class AstPrinter implements AstVisitor {
     }
 
     @Override
-    public void visit(IfNode ifNode) {
+    public void visit(IfNode ifNode) throws Analyzer {
         if (depth < 2) {
             depth+=2;
             astStr.append(formatStr("if"));
@@ -109,7 +109,7 @@ public class AstPrinter implements AstVisitor {
     }
 
     @Override
-    public void visit(FnNode fnNode) {
+    public void visit(FnNode fnNode) throws Analyzer {
         astStr.append(fnNode);
         for (Node bodyNode : fnNode.getBodyNodes()) {
             bodyNode.accept(this); 
@@ -118,14 +118,14 @@ public class AstPrinter implements AstVisitor {
     }
 
     @Override
-    public void visit(PrgrmNode prgrmNode) {
+    public void visit(PrgrmNode prgrmNode) throws Analyzer {
         for (Node fnNode : prgrmNode.getFunctions()) {
             fnNode.accept(this); astStr.append("\n");
         }
     }
 
     @Override
-    public void visit(ExpNode expNode) {
+    public void visit(ExpNode expNode) throws Analyzer {
         astStr.append(formatStr("expression\n"));
         depth++; expNode.getNode().accept(this); depth--;
     }

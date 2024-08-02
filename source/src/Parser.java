@@ -63,13 +63,13 @@ public class Parser {
                     pStack.pop();
                     break;
                 }
-                if (nextType == Lexicon.ID && !compareList(Lexicon.getPrint(),getCharList())) {
+                if (nextType == Lexicon.ID) {
                     pStack.pop(); pStack.push(Lexicon.FORMALPARAM); break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case FORMALPARAM: {
-                if (nextType == Lexicon.ID && !compareList(Lexicon.getPrint(),getCharList())) {
+                if (nextType == Lexicon.ID) {
                     pStack.pop(); for (Lexicon rule : Lexicon.formalParamRules()) {pStack.push(rule);} break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
@@ -272,6 +272,7 @@ public class Parser {
     }
 
     private void isDone() {
+        if (nStack.empty() && nextToken.getType().equals(Lexicon.$)) {System.exit(0);}
         if (pStack.peek().equals(Lexicon.$) && nextToken.getType().equals(Lexicon.$)) {
             run = false;
         }

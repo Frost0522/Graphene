@@ -39,7 +39,7 @@ public class Analyzer extends Exception {
             case DEFINITION:
                 if (Lexicon.definitionError().contains(errorToken.getType())) {
                     _defaultMsg(errorToken.line, errorToken.column, topOfStack, errorToken, errorName);
-                }break;
+                } break;
 
             case PARAMLIST:
                 if (errorToken.getType().equals(Lexicon.RETURN)) {
@@ -61,7 +61,7 @@ public class Analyzer extends Exception {
                 }
                 else if (Lexicon.isOperator().contains(errorToken.getType())) {
                     throw new Analyzer("Line "+errorToken.line+" Column "+errorToken.column+"\nParsing Error: Stack rule "+"'"+topOfStack+"'"+
-                               " encountered unexpected operator '"+errorName+"'.\n");
+                                       " encountered unexpected operator '"+errorName+"'.\n");
                 }
                 else if (Lexicon.bodyError().contains(errorToken.getType())) {
                     _defaultMsg(errorToken.line, errorToken.column, topOfStack, errorToken, errorName);
@@ -70,7 +70,7 @@ public class Analyzer extends Exception {
             case EXP:
                 if (Lexicon.isOperator().contains(errorToken.getType())) {
                     throw new Analyzer("Line "+errorToken.line+" Column "+errorToken.column+"\nParsing Error: Stack rule "+"'"+topOfStack+"'"+
-                               " encountered unexpected operator '"+errorName+"'.\n");
+                                       " encountered unexpected operator '"+errorName+"'.\n");
                 } 
                 else if (Lexicon.expressionError().contains(errorToken.getType())) {
                     _defaultMsg(errorToken.line, errorToken.column, topOfStack, errorToken, errorName);
@@ -193,7 +193,7 @@ public class Analyzer extends Exception {
         }
         if (errorToken.getType().equals(Lexicon.$)) {
             throw new Analyzer("Line "+errorToken.line+" Column "+errorToken.column+"\nParsing Error: Stack rule "+"'"+topOfStack+"'"+
-                           " encountered unexpected end of file.\n");
+                               " encountered unexpected end of file.\n");
         }
         else {
             _defaultMsg(errorToken.line, errorToken.column, topOfStack, errorToken, errorName);
@@ -207,6 +207,20 @@ public class Analyzer extends Exception {
 
 // Error handling for the semantic checker.
     public Analyzer(Lexicon errorType, Node node) throws Analyzer {
-        throw new Analyzer("Semantic error!");  
+        int line = node.position()[0]; int column = node.position()[1];
+        switch (errorType) {
+            case PRIMITIVEFN: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Functions cannot have"+
+                                   " the primitive name 'print'.");
+            }
+            case PRIMITIVEPARAM: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Parameters cannot have"+
+                                   " the primitive name 'print'.");
+            }
+            case NOMAIN: {
+                throw new Analyzer("Semantic Error: No main function was declared.");
+            }
+        }
+        throw new Analyzer("Unexpected Semantic Error.");
     }
 }
