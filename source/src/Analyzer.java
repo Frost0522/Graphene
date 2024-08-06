@@ -220,6 +220,21 @@ public class Analyzer extends Exception {
             case NOMAIN: {
                 throw new Analyzer("Semantic Error: No main function was declared.");
             }
+            case INTOPERROR: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Incorrect operand type 'boolean'"+
+                                   " used in integer operation.");
+            }
+            case BOOLOPERROR: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Incorrect operand type 'integer'"+
+                                   " used in boolean operation.");
+            }
+            case NULLOPERAND: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Unassigned identifier, check that the"+
+                                   " parameter has been declared.");
+            }
+            case RETURNTYPEERROR: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Function return type does not match it's body.");
+            }
         }
         throw new Analyzer("Unexpected Semantic Error.");
     }
