@@ -29,7 +29,8 @@ abstract class Node {
     abstract void accept(AstVisitor visitor) throws Analyzer;
     abstract Lexicon nodeType();
     abstract int[] position();
-    protected Lexicon semanticType;
+    abstract Lexicon getSemanticType();
+    abstract void setSemanticType(Lexicon type);
 }
 
 class NullNode extends Node {
@@ -38,11 +39,14 @@ class NullNode extends Node {
     protected int[] position() {return new int[]{};}
     protected void accept(AstVisitor visitor) {visitor.visit(this);}
     protected Lexicon nodeType() {return Lexicon.$;}
+    protected Lexicon getSemanticType() {return null;}
+    protected void setSemanticType(Lexicon type) {}
 }
 
 class IdNode extends Node {
 
     private Token id;
+    private Lexicon semanticType;
 
     public IdNode(Token t) {
         this.id = t;
@@ -72,11 +76,14 @@ class IdNode extends Node {
     }
     protected void accept(AstVisitor visitor) {visitor.visit(this);}
     protected Lexicon nodeType() {return Lexicon.ID;}
+    protected Lexicon getSemanticType() {return semanticType;}
+    protected void setSemanticType(Lexicon type) {semanticType = type;}
 }
 
 class TypeNode extends Node {
 
     private Token type;
+    private Lexicon semanticType;
 
     public TypeNode(Token t) {
         this.type = t;
@@ -87,12 +94,17 @@ class TypeNode extends Node {
     protected Lexicon getType() {return type.getType();}
     protected void accept(AstVisitor visitor) {visitor.visit(this);}
     protected Lexicon nodeType() {return Lexicon.TYPE;}
+    protected Lexicon getSemanticType() {return semanticType;}
+    protected void setSemanticType(Lexicon type) {semanticType = type;}
 }
 
 class ReturnNode extends TypeNode {
 
+    private Lexicon semanticType;
+
     public ReturnNode(Token t) {
         super(t);
+        semanticType = t.getType();
     }
     @Override
     public String toString() {
@@ -100,12 +112,15 @@ class ReturnNode extends TypeNode {
     }
 
     @Override
+    protected Lexicon getSemanticType() {return semanticType;}
+    @Override
     protected Lexicon nodeType() {return Lexicon.RETURN;}
 }
 
 class LitNode extends Node {
 
     private Token literal;
+    private Lexicon semanticType;
     
     public LitNode(Token t) {
         this.literal = t;
@@ -129,9 +144,9 @@ class LitNode extends Node {
     protected void accept(AstVisitor visitor) {
         visitor.visit(this);
     }
-    protected Lexicon nodeType() {
-        return Lexicon.LITERAL;
-    }
+    protected Lexicon nodeType() {return Lexicon.LITERAL;}
+    protected Lexicon getSemanticType() {return semanticType;}
+    protected void setSemanticType(Lexicon type) {semanticType = type;}
 }
 
 class ParamNode extends Node {
@@ -139,6 +154,7 @@ class ParamNode extends Node {
     private Node id;
     private Node type;
     private String symbol;
+    private Lexicon semanticType;
 
     public ParamNode(Stack<Node> stack) {
         this.type = stack.pop(); this.id = stack.pop(); this.symbol = ":";
@@ -152,28 +168,31 @@ class ParamNode extends Node {
     protected Node getRight() {return type;}
     protected void accept(AstVisitor visitor) throws Analyzer {visitor.visit(this);}
     protected Lexicon nodeType() {return Lexicon.PARAMLIST;}
+    protected Lexicon getSemanticType() {return semanticType;}
+    protected void setSemanticType(Lexicon type) {semanticType = type;}
 }
 
 class FnNode extends Node {
 
     private Node id;
     private ArrayList<Node> parameters = new ArrayList<>();
-    private Node type;
+    private Node returnType;
     private ArrayList<Node> body = new ArrayList<>();
+    private Lexicon semanticType;
 
     public FnNode(Stack<Node> stack) {
         while (stack.peek().nodeType()!=Lexicon.RETURN) {body.add(0, stack.pop());}
-        type = stack.pop();
+        returnType = stack.pop();
         while (stack.peek().nodeType()==Lexicon.PARAMLIST) {parameters.add(0, stack.pop());}
         id = stack.pop();
     }
     public String toString() {
         return "funcion\n   "+id+"\n   parameters "+getParameters()+
-               "\n   "+type+"\n   body\n";
+               "\n   "+returnType+"\n   body\n";
     }
 
     protected Node getIdNode() {return id;}
-    protected Node getNodeType() {return type;}
+    protected Node getReturnType() {return returnType;}
     protected ArrayList<Node> getParamNodes() {return parameters;}
     protected ArrayList<Node> getBodyNodes() {return body;}
     protected String getParameters() {
@@ -188,15 +207,16 @@ class FnNode extends Node {
     protected void accept(AstVisitor visitor) throws Analyzer {
         visitor.visit(this);
     }
-    protected Lexicon nodeType() {
-        return Lexicon.FN;
-    }
+    protected Lexicon nodeType() {return Lexicon.FN;}
+    protected Lexicon getSemanticType() {return semanticType;}
+    protected void setSemanticType(Lexicon type) {semanticType = type;}
 }
 
 class CallNode extends Node {
 
     private Node id;
     private ArrayList<Node> args = new ArrayList<>();
+    private Lexicon semanticType;
 
     public CallNode(Stack<Node> stack) {
         Node node = stack.pop();
@@ -211,9 +231,9 @@ class CallNode extends Node {
     protected void accept(AstVisitor visitor) throws Analyzer {
         visitor.visit(this);
     }
-    protected Lexicon nodeType() {
-        return Lexicon.FNCALL;
-    }
+    protected Lexicon nodeType() {return Lexicon.FNCALL;}
+    protected Lexicon getSemanticType() {return semanticType;}
+    protected void setSemanticType(Lexicon type) {semanticType = type;}
 }
 
 class IfNode extends Node {
@@ -221,6 +241,7 @@ class IfNode extends Node {
     private Node _if;
     private Node _then;
     private Node _else;
+    private Lexicon semanticType;
 
     public IfNode(Stack<Node> stack) {
         _else = stack.pop();
@@ -236,14 +257,15 @@ class IfNode extends Node {
     protected void accept(AstVisitor visitor) throws Analyzer {
         visitor.visit(this);
     }
-    protected Lexicon nodeType() {
-        return Lexicon.IF;
-    }
+    protected Lexicon nodeType() {return Lexicon.IF;}
+    protected Lexicon getSemanticType() {return semanticType;}
+    protected void setSemanticType(Lexicon type) {semanticType = type;}
 }
 
 class PrgrmNode extends Node {
 
     private ArrayList<Node> functionList = new ArrayList<>();
+    private Lexicon semanticType;
 
     public PrgrmNode(Stack<Node> stack) {
         while (!stack.empty()) {functionList.add(0,stack.pop());}
@@ -259,16 +281,17 @@ class PrgrmNode extends Node {
     protected void accept(AstVisitor visitor) throws Analyzer {
         visitor.visit(this);
     }
-    protected Lexicon nodeType() {
-        return Lexicon.PROGRAM;
-    }
+    protected Lexicon nodeType() {return Lexicon.PROGRAM;}
+    protected Lexicon getSemanticType() {return semanticType;}
+    protected void setSemanticType(Lexicon type) {semanticType = type;}
 }
 
 class ExpNode extends Node {
 
     private Node exp;
-    public Lexicon type;
+    private Lexicon semanticType;
 
+    public Lexicon type;
     public ExpNode(Stack<Node> stack) {
         exp = stack.pop();
     }
@@ -279,13 +302,14 @@ class ExpNode extends Node {
     protected void accept(AstVisitor visitor) throws Analyzer {
         visitor.visit(this);
     }
-    protected Lexicon nodeType() {
-        return Lexicon.EXP;
-    }
+    protected Lexicon nodeType() {return Lexicon.EXP;}
+    protected Lexicon getSemanticType() {return semanticType;}
+    protected void setSemanticType(Lexicon type) {semanticType = type;}
 }
 
 class BinaryNode extends Node {
 
+    private Lexicon semanticType;
     private Node leftNode;
     private Node rightNode;
     private String operator;
@@ -305,6 +329,8 @@ class BinaryNode extends Node {
         visitor.visit(this);
     }
     protected Lexicon nodeType() {return nodeType;}
+    protected Lexicon getSemanticType() {return semanticType;}
+    protected void setSemanticType(Lexicon type) {semanticType = type;}
 }
 
 class EqNode extends BinaryNode {public EqNode(Stack<Node> stack) {super(stack, "==", Lexicon.EQUIVALENT);}}

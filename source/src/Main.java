@@ -45,7 +45,9 @@ public class Main {
                 Scanner scanner = new Scanner(pushReader);
                 Parser parser = new Parser(scanner);
                 AstPrinter astPrinter = new AstPrinter();
-                parser.nStack.pop().accept(astPrinter);
+                parser.nStack.peek().accept(astPrinter);
+                SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
+                parser.nStack.pop().accept(semanticAnalyzer);
                 System.out.println(astPrinter);
                 break;
             }

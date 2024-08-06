@@ -39,23 +39,77 @@ public class SemanticAnalyzer implements AstVisitor {
         for (Node paramNode : fnNode.getParamNodes()) {
             paramNode.accept(this);
         }
-        System.out.println();
         for (Node bodyNode : fnNode.getBodyNodes()) {
             bodyNode.accept(this);
+            // Check that the function return type matches that of the body node
+            if (currentFnNode.getReturnType().getSemanticType()!=bodyNode.getSemanticType()) {
+                new Analyzer(Lexicon.RETURNTYPEERROR,currentFnNode.getReturnType());
+            }
         }
     }
 
     @Override
     public void visit(BinaryNode binNode) throws Analyzer {
+
         if (binNode.getLeft()!=null) {
             binNode.getLeft().accept(this);
             switch (binNode.getLeft().nodeType()) {
                 case ID: {
+                    // If the id node matches a parameter in the parameter list, set it's type
                     for (IdNode idNode : symbols.getParamList()) {
-                        if (idNode.getName()==currentIdNode.getName()) {}
-                        currentIdNode.semanticType = idNode.semanticType;
+                        if (idNode.getName().equals(currentIdNode.getName())) {
+                            currentIdNode.setSemanticType(idNode.getSemanticType());
+                        }
                     }
+                    // If semantic type of the id node is not set, throw an error
+                    if (currentIdNode.getSemanticType()==null) {new Analyzer(Lexicon.NULLOPERAND,currentIdNode);}
+                    // If the id node (operand) does not match the binary node type (operator), throw an error
+                    else if ((Lexicon.isNumericOp().contains(binNode.nodeType())) && (currentIdNode.getSemanticType()==Lexicon.BOOLEAN)) {
+                        new Analyzer(Lexicon.INTOPERROR,currentIdNode);
+                    }
+                    else if ((Lexicon.isBooleanOp().contains(binNode.nodeType())) && (currentIdNode.getSemanticType()==Lexicon.INTEGER)) {
+                        new Analyzer(Lexicon.BOOLOPERROR,currentIdNode);
+                    }
+                    break;
                 }
+                case INTEGERLITERAL: {
+                    if (Lexicon.isBooleanOp().contains(binNode.nodeType())) {
+                        new Analyzer(Lexicon.BOOLOPERROR,currentIdNode);
+                    }
+                    break;
+                }
+            }
+        }
+
+        if (binNode.getRight()!=null) {
+            binNode.getRight().accept(this);
+            switch (binNode.getRight().nodeType()) {
+                case ID: {
+                    for (IdNode idNode : symbols.getParamList()) {
+                        if (idNode.getName().equals(currentIdNode.getName())) {
+                            currentIdNode.setSemanticType(idNode.getSemanticType());
+                        }
+                    }
+                    if (currentIdNode.getSemanticType()==null) {new Analyzer(Lexicon.NULLOPERAND,currentIdNode);}
+                    else if ((Lexicon.isNumericOp().contains(binNode.nodeType())) && (currentIdNode.getSemanticType()==Lexicon.BOOLEAN)) {
+                        new Analyzer(Lexicon.INTOPERROR,currentIdNode);
+                    }
+                    else if ((Lexicon.isBooleanOp().contains(binNode.nodeType())) && (currentIdNode.getSemanticType()==Lexicon.INTEGER)) {
+                        new Analyzer(Lexicon.BOOLOPERROR,currentIdNode);
+                    }
+                    break;
+                }
+                case INTEGERLITERAL: {
+                    if (Lexicon.isBooleanOp().contains(binNode.nodeType())) {
+                        new Analyzer(Lexicon.BOOLOPERROR,currentIdNode);
+                    }
+                    break;
+                }
+            }
+            //Finally, set the type of the binary operation, if possible
+            if ((Lexicon.isNumericOp().contains(binNode.nodeType()) && (binNode.getLeft().getSemanticType()==binNode.getRight().getSemanticType())) ||
+                (Lexicon.isBooleanOp().contains(binNode.nodeType()) && (binNode.getLeft().getSemanticType()==binNode.getRight().getSemanticType()))) {
+                binNode.setSemanticType(binNode.getLeft().getSemanticType());
             }
         }
     } 
@@ -67,7 +121,6 @@ public class SemanticAnalyzer implements AstVisitor {
         if (currentIdNode.getName().equals("print")) {
             new Analyzer(Lexicon.PRIMITIVEPARAM, currentIdNode);
         }
-        paramNode.getRight().accept(this);
     }
 
     @Override
@@ -118,7 +171,7 @@ class SymbolMap implements AstVisitor {
         paramNode.getLeft().accept(this);
         paramList.add(currentIdNode);
         paramNode.getRight().accept(this);
-        currentIdNode.semanticType = currentTypeNode.getType();
+        currentIdNode.setSemanticType(currentTypeNode.getType());
     }
 
     @Override

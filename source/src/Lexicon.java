@@ -21,7 +21,7 @@ public enum Lexicon {
     MKNEG, MKPLUS, MKEXP,
 
     //Error types for symantic analyzer
-    PRIMITIVEFN, PRIMITIVEPARAM, NOMAIN;
+    PRIMITIVEFN, PRIMITIVEPARAM, NOMAIN, INTOPERROR, BOOLOPERROR, NULLOPERAND, RETURNTYPEERROR;
 
     public int value() {
         switch (this) {
@@ -109,6 +109,10 @@ public enum Lexicon {
         return toArray(FN,LEFTPAREN,RIGHTPAREN,RETURN,COMMA,COLON,INTEGER,BOOLEAN,EQUIVALENT,LESSTHAN,
                        OR,PLUS,MINUS,AND,TIMES,DIVIDE,NOT,IF,ELSE,ID,BOOLEANLITERAL,INTEGERLITERAL);
     }
+
+    public static ArrayList<Lexicon> isBooleanOp() {return toArray(AND,OR,EQUIVALENT);}
+
+    public static ArrayList<Lexicon> isNumericOp() {return toArray(PLUS,MINUS,TIMES,DIVIDE,LESSTHAN,EQUIVALENT);}
 
     public static ArrayList<Lexicon> isOperator() {return toArray(PLUS,MINUS,TIMES,DIVIDE,AND,OR,EQUIVALENT,LESSTHAN);}
 
