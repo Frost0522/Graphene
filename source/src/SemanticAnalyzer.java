@@ -1,5 +1,6 @@
 package src;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class SemanticAnalyzer implements AstVisitor {
 
@@ -44,6 +45,10 @@ public class SemanticAnalyzer implements AstVisitor {
             // Check that the function return type matches that of the body node
             if (currentFnNode.getReturnType().getSemanticType()!=bodyNode.getSemanticType()) {
                 new Analyzer(Lex.RETURNTYPEERROR,bodyNode);
+            }
+            // So long as the body node is not a print expression, set the funtions semantic type
+            if (bodyNode.getSemanticType()!=Lex.PRINTEXP) {
+                fnNode.setSemanticType(bodyNode.getSemanticType());
             }
         }
     }
@@ -96,7 +101,12 @@ public class SemanticAnalyzer implements AstVisitor {
             else if (returnsTypeBool(binNode)) {binNode.setSemanticType(Lex.BOOLEAN);}
             else {binNode.setSemanticType(Lex.INTEGER);}
         }
-    } 
+    }
+
+    @Override
+    public void visit(CallNode callNode) throws Analyzer {
+
+    }
 
     @Override
     public void visit(ParamNode paramNode) throws Analyzer {
@@ -110,12 +120,9 @@ public class SemanticAnalyzer implements AstVisitor {
     @Override
     public void visit(IdNode idNode) {
         if (idNode.getSemanticType()==null) {
-            for (IdNode id : symbols.getParamList()) {
-                // If the id node matches a parameter in the parameter list, set it's type
-                if (id.getName().equals(idNode.getName())) {
-                    idNode.setSemanticType(id.getSemanticType());
-                }
-            }
+            // If the id node matches a parameter in the parameter list, set it's type
+            symbols.setParam(currentFnNode, idNode);
+            
         }
         currentIdNode = idNode;
     }
@@ -155,8 +162,9 @@ public class SemanticAnalyzer implements AstVisitor {
 
 class SymbolMap implements AstVisitor {
 
-    private ArrayList<IdNode> paramList = new ArrayList<>();
-    private Node currentFn;
+    private HashMap<String,FunctionSymbol> map = new HashMap<>();
+    private FunctionSymbol fnSymbol = new FunctionSymbol();
+    private FnNode currentFn;
     private TypeNode currentTypeNode;
     private IdNode currentIdNode;
 
@@ -164,7 +172,14 @@ class SymbolMap implements AstVisitor {
         node.accept(this);
     }
 
-    protected ArrayList<IdNode> getParamList() {return paramList;}
+    protected HashMap<String,FunctionSymbol> getMap() {return map;}
+    protected void setParam(FnNode fnNode, IdNode idNode) {
+        for (IdNode id : map.get(fnNode.getIdNode().toString()).getParamNodes()) {
+            if (id.toString().equals(idNode.toString())) {
+                idNode.setSemanticType(id.getSemanticType());
+            }
+        }
+    }
 
     @Override
     public void visit(PrgrmNode prgrmNode) throws Analyzer {
@@ -175,7 +190,7 @@ class SymbolMap implements AstVisitor {
 
     @Override
     public void visit(FnNode fnNode) throws Analyzer {
-        
+        fnSymbol = new FunctionSymbol();
         currentFn = fnNode;
         for (Node paramNode : fnNode.getParamNodes()) {
             paramNode.accept(this);
@@ -183,20 +198,28 @@ class SymbolMap implements AstVisitor {
         for (Node bodyNode : fnNode.getBodyNodes()) {
             bodyNode.accept(this);
         }
+        map.put(fnNode.getIdNode().toString(), fnSymbol);
     }
 
     @Override
     public void visit(ParamNode paramNode) throws Analyzer {
         paramNode.getLeft().accept(this);
-        paramList.add(currentIdNode);
         paramNode.getRight().accept(this);
         currentIdNode.setSemanticType(currentTypeNode.getType());
+        fnSymbol.addParamNode(currentIdNode);
     }
 
     @Override
     public void visit(CallNode callNode) throws Analyzer {
+        callNode.getId().accept(this);
+        // Add id node of function call node to function symbol
+        fnSymbol.addCallNode(currentIdNode);
         for (Node arg : callNode.getArgs()) {
             arg.accept(this);
+            // If arg is an id node add it to function symbol
+            if (arg.toString().equals(currentIdNode)) {
+                fnSymbol.addIdNode(currentIdNode);
+            }
         }
     }
 
@@ -230,5 +253,25 @@ class SymbolMap implements AstVisitor {
     @Override
     public void visit(TypeNode typeNode) {
         currentTypeNode = typeNode;
+    }
+
+    class FunctionSymbol {
+
+        private ArrayList<IdNode> idNodes;
+        private ArrayList<IdNode> paramNodes; 
+        private ArrayList<IdNode> callNodes;
+
+        public FunctionSymbol() {
+            this.idNodes = new ArrayList<>();
+            this.callNodes = new ArrayList<>();
+            this.paramNodes = new ArrayList<>();
+        }
+        
+        protected void addIdNode(IdNode idNode) {idNodes.add(idNode);}
+        protected void addCallNode(IdNode callNode) {callNodes.add(callNode);}
+        protected void addParamNode(IdNode idNode) {paramNodes.add(idNode);}
+        protected ArrayList<IdNode> getIdNodes() {return idNodes;}
+        protected ArrayList<IdNode> getCallNodes() {return callNodes;}
+        protected ArrayList<IdNode> getParamNodes() {return paramNodes;}
     }
 }
