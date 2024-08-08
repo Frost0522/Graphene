@@ -34,7 +34,7 @@ In a terminal, navigate to the source directory and run the build command. Once 
 
 > `Visitor Pattern` : The object used to print out the node stack could use a bit of a touch up as well, it works fine, but does not follow the pattern I initally set out to use.
 
-`Updating the analyzer` : With all of the changes to the parser, nodes, and node printer, I need to make sure the Analyzer is maintained and still well enough to handle all parsing errors.
+> `Updating the analyzer` : With all of the changes to the parser, nodes, and node printer, I need to make sure the Analyzer is maintained and still well enough to handle all parsing errors.
 
 `Semantic Analysis` : Now with sytax out of the way I can finally begin working on the semantics.
 
