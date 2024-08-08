@@ -18,7 +18,7 @@ public class SemanticAnalyzer implements AstVisitor {
                 fnNode.accept(this);
             }
             // Check if the program has a main function
-            if (!hasMain) {new Analyzer(Lexicon.NOMAIN,prgrmNode);}
+            if (!hasMain) {new Analyzer(Lex.NOMAIN,prgrmNode);}
         }
         catch (Analyzer err) {
             System.out.println(err.getMessage());
@@ -32,7 +32,7 @@ public class SemanticAnalyzer implements AstVisitor {
         fnNode.getIdNode().accept(this);
         // Check function calls are not named after primitives
         if (currentIdNode.getName().equals("print")) {
-            new Analyzer(Lexicon.PRIMITIVEFN, currentIdNode);
+            new Analyzer(Lex.PRIMITIVEFN, currentIdNode);
         }
         // Set boolean hasMain true if main function is found
         if (currentIdNode.getName().equals("main")) {hasMain=true;}
@@ -43,7 +43,7 @@ public class SemanticAnalyzer implements AstVisitor {
             bodyNode.accept(this);
             // Check that the function return type matches that of the body node
             if (currentFnNode.getReturnType().getSemanticType()!=bodyNode.getSemanticType()) {
-                new Analyzer(Lexicon.RETURNTYPEERROR,currentFnNode.getReturnType());
+                new Analyzer(Lex.RETURNTYPEERROR,bodyNode);
             }
         }
     }
@@ -55,27 +55,16 @@ public class SemanticAnalyzer implements AstVisitor {
             binNode.getLeft().accept(this);
             switch (binNode.getLeft().nodeType()) {
                 case ID: {
-                    // If the id node matches a parameter in the parameter list, set it's type
-                    for (IdNode idNode : symbols.getParamList()) {
-                        if (idNode.getName().equals(currentIdNode.getName())) {
-                            currentIdNode.setSemanticType(idNode.getSemanticType());
-                        }
-                    }
+                    Lex currIdType = currentIdNode.getSemanticType();
                     // If semantic type of the id node is not set, throw an error
-                    if (currentIdNode.getSemanticType()==null) {new Analyzer(Lexicon.NULLOPERAND,currentIdNode);}
+                    if (currIdType==null) {new Analyzer(Lex.NULLOPERAND,currentIdNode);}
                     // If the id node (operand) does not match the binary node type (operator), throw an error
-                    else if ((Lexicon.isNumericOp().contains(binNode.nodeType())) && (currentIdNode.getSemanticType()==Lexicon.BOOLEAN)) {
-                        new Analyzer(Lexicon.INTOPERROR,currentIdNode);
-                    }
-                    else if ((Lexicon.isBooleanOp().contains(binNode.nodeType())) && (currentIdNode.getSemanticType()==Lexicon.INTEGER)) {
-                        new Analyzer(Lexicon.BOOLOPERROR,currentIdNode);
-                    }
+                    else if (takesTypeInt(binNode) && (currIdType==Lex.BOOLEAN)) {new Analyzer(Lex.INTOPERROR,currentIdNode);}
+                    else if (takesTypeBool(binNode) && (currIdType==Lex.INTEGER)) {new Analyzer(Lex.BOOLOPERROR,currentIdNode);}
                     break;
                 }
                 case INTEGERLITERAL: {
-                    if (Lexicon.isBooleanOp().contains(binNode.nodeType())) {
-                        new Analyzer(Lexicon.BOOLOPERROR,currentIdNode);
-                    }
+                    if (takesTypeBool(binNode)) {new Analyzer(Lex.BOOLOPERROR,currentIdNode);}
                     break;
                 }
             }
@@ -85,32 +74,27 @@ public class SemanticAnalyzer implements AstVisitor {
             binNode.getRight().accept(this);
             switch (binNode.getRight().nodeType()) {
                 case ID: {
-                    for (IdNode idNode : symbols.getParamList()) {
-                        if (idNode.getName().equals(currentIdNode.getName())) {
-                            currentIdNode.setSemanticType(idNode.getSemanticType());
-                        }
-                    }
-                    if (currentIdNode.getSemanticType()==null) {new Analyzer(Lexicon.NULLOPERAND,currentIdNode);}
-                    else if ((Lexicon.isNumericOp().contains(binNode.nodeType())) && (currentIdNode.getSemanticType()==Lexicon.BOOLEAN)) {
-                        new Analyzer(Lexicon.INTOPERROR,currentIdNode);
-                    }
-                    else if ((Lexicon.isBooleanOp().contains(binNode.nodeType())) && (currentIdNode.getSemanticType()==Lexicon.INTEGER)) {
-                        new Analyzer(Lexicon.BOOLOPERROR,currentIdNode);
-                    }
+                    Lex currIdType = currentIdNode.getSemanticType();
+                    if (currIdType==null) {new Analyzer(Lex.NULLOPERAND,currentIdNode);}
+                    else if (takesTypeInt(binNode) && (currIdType==Lex.BOOLEAN)) {new Analyzer(Lex.INTOPERROR,currentIdNode);}
+                    else if (takesTypeBool(binNode) && (currIdType==Lex.INTEGER)) {new Analyzer(Lex.BOOLOPERROR,currentIdNode);}
                     break;
                 }
                 case INTEGERLITERAL: {
-                    if (Lexicon.isBooleanOp().contains(binNode.nodeType())) {
-                        new Analyzer(Lexicon.BOOLOPERROR,currentIdNode);
-                    }
+                    if (takesTypeBool(binNode)) {new Analyzer(Lex.BOOLOPERROR,currentIdNode);}
                     break;
                 }
             }
+
+            Lex leftType = binNode.getLeft().getSemanticType();
+            Lex rightType = binNode.getRight().getSemanticType();
+            Lex fnReturnType = currentFnNode.getReturnType().nodeType();
+
             //Finally, set the type of the binary operation, if possible
-            if ((Lexicon.isNumericOp().contains(binNode.nodeType()) && (binNode.getLeft().getSemanticType()==binNode.getRight().getSemanticType())) ||
-                (Lexicon.isBooleanOp().contains(binNode.nodeType()) && (binNode.getLeft().getSemanticType()==binNode.getRight().getSemanticType()))) {
-                binNode.setSemanticType(binNode.getLeft().getSemanticType());
-            }
+            if (leftType!=rightType && leftType!=fnReturnType) {new Analyzer(Lex.DIFFOPERANDS,binNode.getSymbol(),binNode.getLeft());}
+            else if (leftType!=rightType && rightType!=fnReturnType) {new Analyzer(Lex.DIFFOPERANDS,binNode.getSymbol(),binNode.getRight());}
+            else if (returnsTypeBool(binNode)) {binNode.setSemanticType(Lex.BOOLEAN);}
+            else {binNode.setSemanticType(Lex.INTEGER);}
         }
     } 
 
@@ -119,18 +103,53 @@ public class SemanticAnalyzer implements AstVisitor {
         paramNode.getLeft().accept(this);
         // Check Parameters are not named after primitives
         if (currentIdNode.getName().equals("print")) {
-            new Analyzer(Lexicon.PRIMITIVEPARAM, currentIdNode);
+            new Analyzer(Lex.PRIMITIVEPARAM, currentIdNode);
         }
     }
 
     @Override
     public void visit(IdNode idNode) {
+        if (idNode.getSemanticType()==null) {
+            for (IdNode id : symbols.getParamList()) {
+                // If the id node matches a parameter in the parameter list, set it's type
+                if (id.getName().equals(idNode.getName())) {
+                    idNode.setSemanticType(id.getSemanticType());
+                }
+            }
+        }
         currentIdNode = idNode;
     }
 
     @Override
     public void visit(LitNode litNode) {
         currentLitNode = litNode;
+    }
+
+    private static boolean takesTypeInt(Node binNode) {
+        Lex opType = binNode.nodeType();
+        Lex[] typeList = {Lex.PLUS,Lex.MINUS,Lex.DIVIDE,Lex.TIMES,Lex.LESSTHAN};
+        for (Lex intOp : typeList) {
+            if (intOp==opType) {return true;}
+        }
+        return false;
+    }
+
+    private static boolean takesTypeBool(Node binNode) {
+        Lex opType = binNode.nodeType();
+        Lex[] typeList = {Lex.OR,Lex.AND};
+        for (Lex boolOp : typeList) {
+            if (boolOp==opType) {return true;}
+        }
+        return false;
+    }
+
+    private static boolean returnsTypeBool(Node binNode) {
+        Lex opType = binNode.nodeType();
+        Lex[] typeList = {Lex.OR,Lex.AND,Lex.LESSTHAN,Lex.EQUIVALENT};
+        for (Lex boolOp : typeList) {
+            if (boolOp==opType) {return true;}
+        }
+        return false;
     }
 }
 

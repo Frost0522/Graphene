@@ -8,19 +8,19 @@ public class Parser {
     private Token lastToken;
     private Boolean run = true;
     private Token nextToken;
-    private Stack<Lexicon> pStack;
+    private Stack<Lex> pStack;
     private ArrayList<Token> tokenLst;
     public Stack<Node> nStack = new Stack<>();
 
     public Parser(Scanner scanner) {
 
-        pStack = new Stack<Lexicon>();
+        pStack = new Stack<Lex>();
         tokenLst = scanner.tokenLst;
         nextToken = tokenLst.get(0);
 
-        pStack.push(Lexicon.$);
-        pStack.push(Lexicon.MKPROGRAM);
-        pStack.push(Lexicon.PROGRAM);
+        pStack.push(Lex.$);
+        pStack.push(Lex.MKPROGRAM);
+        pStack.push(Lex.PROGRAM);
     
         try {
             while (run) {
@@ -37,185 +37,185 @@ public class Parser {
     }
 
     private void parseTable() throws Analyzer {
-        Lexicon nextType = tokenLst.get(0).getType();
+        Lex nextType = tokenLst.get(0).getType();
         switch (pStack.peek()) {
             case PROGRAM: {
-                if (nextType == Lexicon.FN || nextType == Lexicon.$) {
-                    pStack.pop(); pStack.push(Lexicon.DEFINITIONLIST); break;
+                if (nextType == Lex.FN || nextType == Lex.$) {
+                    pStack.pop(); pStack.push(Lex.DEFINITIONLIST); break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case DEFINITIONLIST: {
-                if (nextType == Lexicon.FN) {
-                    pStack.push(Lexicon.DEFINITION); break;
+                if (nextType == Lex.FN) {
+                    pStack.push(Lex.DEFINITION); break;
                 }
-                if (nextType == Lexicon.$) {pStack.pop(); break;}
+                if (nextType == Lex.$) {pStack.pop(); break;}
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case DEFINITION: {
-                if (nextType == Lexicon.FN) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.definitionRules()) {pStack.push(rule);} break;
+                if (nextType == Lex.FN) {
+                    pStack.pop(); for (Lex rule : Lex.definitionRules()) {pStack.push(rule);} break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case PARAMLIST: {
-                if (nextType == Lexicon.RIGHTPAREN) {
+                if (nextType == Lex.RIGHTPAREN) {
                     pStack.pop();
                     break;
                 }
-                if (nextType == Lexicon.ID) {
-                    pStack.pop(); pStack.push(Lexicon.FORMALPARAM); break;
+                if (nextType == Lex.ID) {
+                    pStack.pop(); pStack.push(Lex.FORMALPARAM); break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case FORMALPARAM: {
-                if (nextType == Lexicon.ID) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.formalParamRules()) {pStack.push(rule);} break;
+                if (nextType == Lex.ID) {
+                    pStack.pop(); for (Lex rule : Lex.formalParamRules()) {pStack.push(rule);} break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case FORMALPARAMTAIL: {
-                if (nextType == Lexicon.RIGHTPAREN) {
+                if (nextType == Lex.RIGHTPAREN) {
                     pStack.pop(); break;
                 }
-                if (nextType == Lexicon.COMMA) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.formalParamTailRules()) {pStack.push(rule);} break;
+                if (nextType == Lex.COMMA) {
+                    pStack.pop(); for (Lex rule : Lex.formalParamTailRules()) {pStack.push(rule);} break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case IDWITHTYPE: {  
-                if (nextType == Lexicon.ID) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.idWithTypeRules()) {pStack.push(rule);} break;
+                if (nextType == Lex.ID) {
+                    pStack.pop(); for (Lex rule : Lex.idWithTypeRules()) {pStack.push(rule);} break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case TYPE: {
-                if (nextType == Lexicon.INTEGER) {
-                    pStack.pop(); pStack.push(Lexicon.INTEGER); break;
+                if (nextType == Lex.INTEGER) {
+                    pStack.pop(); pStack.push(Lex.INTEGER); break;
                 }
-                if (nextType == Lexicon.BOOLEAN) {
-                    pStack.pop(); pStack.push(Lexicon.BOOLEAN); break;
+                if (nextType == Lex.BOOLEAN) {
+                    pStack.pop(); pStack.push(Lex.BOOLEAN); break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case BODY: {
-                if (compareList(Lexicon.getPrint(),getCharList())) {
-                    pStack.push(Lexicon.PRINTEXP); break;
+                if (compareList(Lex.getPrint(),tokenLst.get(0).getCharList())) {
+                    pStack.push(Lex.PRINTEXP); break;
                 }
-                if (Lexicon.isExpression().contains(nextType)) {
-                    pStack.pop(); pStack.push(Lexicon.EXP); break;
+                if (listContains(nextType,Lex.isExpression())) {
+                    pStack.pop(); pStack.push(Lex.EXP); break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case PRINTEXP: {
-                if (compareList(Lexicon.getPrint(),getCharList())) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.printExpRules()) {pStack.push(rule);} break;
+                if (compareList(Lex.getPrint(),tokenLst.get(0).getCharList())) {
+                    pStack.pop(); for (Lex rule : Lex.printExpRules()) {pStack.push(rule);} break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case EXP: {
-                if (Lexicon.isExpression().contains(nextType)) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.expRules()) {pStack.push(rule);} break;
+                if (listContains(nextType,Lex.isExpression())) {
+                    pStack.pop(); for (Lex rule : Lex.expRules()) {pStack.push(rule);} break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case EXPTAIL: {
-                if (Lexicon.isExpTail().contains(nextType)) {pStack.pop(); break;}
-                if (nextType == Lexicon.EQUIVALENT) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.equivalentRules()) {pStack.push(rule);} break;
+                if (listContains(nextType,Lex.isExpTail())) {pStack.pop(); break;}
+                if (nextType == Lex.EQUIVALENT) {
+                    pStack.pop(); for (Lex rule : Lex.equivalentRules()) {pStack.push(rule);} break;
                 }
-                if (nextType == Lexicon.LESSTHAN) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.lessThanRules()) {pStack.push(rule);} break;
+                if (nextType == Lex.LESSTHAN) {
+                    pStack.pop(); for (Lex rule : Lex.lessThanRules()) {pStack.push(rule);} break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case SIMPLEEXP: {
-                if (Lexicon.isExpression().contains(nextType)) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.simpleExpRules()) {pStack.push(rule);} break;
+                if (listContains(nextType,Lex.isExpression())) {
+                    pStack.pop(); for (Lex rule : Lex.simpleExpRules()) {pStack.push(rule);} break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case SIMPLEEXPTAIL: {
-                if (Lexicon.isSimpleExpTail().contains(nextType)) {pStack.pop(); break;}
-                if (nextType == Lexicon.OR) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.orRules()) {pStack.push(rule);} break;
+                if (listContains(nextType,Lex.isSimpleExpTail())) {pStack.pop(); break;}
+                if (nextType == Lex.OR) {
+                    pStack.pop(); for (Lex rule : Lex.orRules()) {pStack.push(rule);} break;
                 }
-                if (nextType == Lexicon.PLUS) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.plusRules()) {pStack.push(rule);} break;
+                if (nextType == Lex.PLUS) {
+                    pStack.pop(); for (Lex rule : Lex.plusRules()) {pStack.push(rule);} break;
                 }
-                if (nextType == Lexicon.MINUS) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.minusRules()) {pStack.push(rule);} break;
+                if (nextType == Lex.MINUS) {
+                    pStack.pop(); for (Lex rule : Lex.minusRules()) {pStack.push(rule);} break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case TERM: {
-                if (Lexicon.isExpression().contains(nextType)) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.termRules()) {pStack.push(rule);} break;
+                if (listContains(nextType,Lex.isExpression())) {
+                    pStack.pop(); for (Lex rule : Lex.termRules()) {pStack.push(rule);} break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case TERMTAIL: {
-                if (Lexicon.isTermTail().contains(nextType)) {pStack.pop(); break;}
-                if (nextType == Lexicon.AND) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.andRules()) {pStack.push(rule);} break;
+                if (listContains(nextType,Lex.isTermTail())) {pStack.pop(); break;}
+                if (nextType == Lex.AND) {
+                    pStack.pop(); for (Lex rule : Lex.andRules()) {pStack.push(rule);} break;
                 }
-                if (nextType == Lexicon.TIMES) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.timesRules()) {pStack.push(rule);} break;
+                if (nextType == Lex.TIMES) {
+                    pStack.pop(); for (Lex rule : Lex.timesRules()) {pStack.push(rule);} break;
                 }
-                if (nextType == Lexicon.DIVIDE) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.divideRules()) {pStack.push(rule);} break;
+                if (nextType == Lex.DIVIDE) {
+                    pStack.pop(); for (Lex rule : Lex.divideRules()) {pStack.push(rule);} break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case FACTOR: {
-                if (nextType == Lexicon.BOOLEANLITERAL || nextType == Lexicon.INTEGERLITERAL) {
-                    pStack.pop(); pStack.push(Lexicon.LITERAL);
+                if (nextType == Lex.BOOLEANLITERAL || nextType == Lex.INTEGERLITERAL) {
+                    pStack.pop(); pStack.push(Lex.LITERAL);
                     break;
                 }
-                if (nextType == Lexicon.LEFTPAREN) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.leftParenFactorRules()) {pStack.push(rule);} break;
+                if (nextType == Lex.LEFTPAREN) {
+                    pStack.pop(); for (Lex rule : Lex.leftParenFactorRules()) {pStack.push(rule);} break;
                 }
-                if (nextType == Lexicon.MINUS) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.minusFactorRules()) {pStack.push(rule);} break;
+                if (nextType == Lex.MINUS) {
+                    pStack.pop(); for (Lex rule : Lex.minusFactorRules()) {pStack.push(rule);} break;
                 }
-                if (nextType == Lexicon.NOT) {
-                    pStack.push(Lexicon.NOT); break;
+                if (nextType == Lex.NOT) {
+                    pStack.push(Lex.NOT); break;
                 }
-                if (nextType == Lexicon.IF) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.ifRules()) {pStack.push(rule);} break;
+                if (nextType == Lex.IF) {
+                    pStack.pop(); for (Lex rule : Lex.ifRules()) {pStack.push(rule);} break;
                 }
-                if (nextType == Lexicon.ID) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.idRules()) {pStack.push(rule);} break;
+                if (nextType == Lex.ID) {
+                    pStack.pop(); for (Lex rule : Lex.idRules()) {pStack.push(rule);} break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case ARGLIST: {
-                if (Lexicon.isArgList().contains(nextType)) {pStack.pop(); break;}
-                if (nextType == Lexicon.LEFTPAREN) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.leftParenArgRules()) {pStack.push(rule);} break;
+                if (listContains(nextType,Lex.isArgList())) {pStack.pop(); break;}
+                if (nextType == Lex.LEFTPAREN) {
+                    pStack.pop(); for (Lex rule : Lex.leftParenArgRules()) {pStack.push(rule);} break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case FORMALARG: {
-                if (Lexicon.isExpression().contains(nextType)) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.formalArgRules()) {pStack.push(rule);} break;
+                if (listContains(nextType,Lex.isExpression())) {
+                    pStack.pop(); for (Lex rule : Lex.formalArgRules()) {pStack.push(rule);} break;
                 }
-                if (nextType == Lexicon.RIGHTPAREN) {pStack.pop(); break;}
+                if (nextType == Lex.RIGHTPAREN) {pStack.pop(); break;}
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case FORMALARGTAIL: {
-                if (nextType == Lexicon.RIGHTPAREN) {pStack.pop(); break;}
-                if (nextType == Lexicon.COMMA) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.commaRules()) {pStack.push(rule);} break;
+                if (nextType == Lex.RIGHTPAREN) {pStack.pop(); break;}
+                if (nextType == Lex.COMMA) {
+                    pStack.pop(); for (Lex rule : Lex.commaRules()) {pStack.push(rule);} break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case LITERAL: {
-                if (nextType == Lexicon.BOOLEANLITERAL) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.booleanLitRules()) {pStack.push(rule);} break;
+                if (nextType == Lex.BOOLEANLITERAL) {
+                    pStack.pop(); for (Lex rule : Lex.booleanLitRules()) {pStack.push(rule);} break;
                 }
-                if (nextType == Lexicon.INTEGERLITERAL) {
-                    pStack.pop(); for (Lexicon rule : Lexicon.integerLitRules()) {pStack.push(rule);} break;
+                if (nextType == Lex.INTEGERLITERAL) {
+                    pStack.pop(); for (Lex rule : Lex.integerLitRules()) {pStack.push(rule);} break;
                 }
                 new Analyzer(tokenLst, deadLst, pStack);
             }
@@ -224,8 +224,8 @@ public class Parser {
     }
 
     public void semanticAction() {
-        Lexicon semanticRule = pStack.peek();
-        if (lastToken==null) {semanticRule=Lexicon.$;}
+        Lex semanticRule = pStack.peek();
+        if (lastToken==null) {semanticRule=Lex.$;}
         switch (semanticRule) {
             case MKID: {pStack.pop(); nStack.push(new IdNode(lastToken)); break;}
             case MKTYPE: {pStack.pop(); nStack.push(new TypeNode(lastToken)); break;}
@@ -251,35 +251,28 @@ public class Parser {
         }
     }
 
-    public static Boolean terminal(Stack<Lexicon> stack) {
-        Lexicon type = stack.peek();
-        if (Lexicon.isTerminal().contains(type)) {
-            return true;
-        }
-        return false;
-    }
-
     private Token removeTerminal() throws Analyzer {
 
-        while (terminal(pStack)) {
+        while (listContains(pStack.peek(),Lex.isTerminal())) {
             if (!pStack.peek().equals(tokenLst.get(0).getType())) {new Analyzer(tokenLst, deadLst, pStack);}
             lastToken = tokenLst.get(0);
             nextToken = getNextToken();
-            if (lastToken.getType()==Lexicon.MINUS && nextToken.getType()==Lexicon.MINUS) {new Analyzer(tokenLst, deadLst, pStack);}
+            if (lastToken.getType()==Lex.MINUS && nextToken.getType()==Lex.MINUS) {new Analyzer(tokenLst, deadLst, pStack);}
             pStack.pop();
         }
         return nextToken;
     }
 
     private void isDone() {
-        if (nStack.empty() && nextToken.getType().equals(Lexicon.$)) {System.exit(0);}
-        if (pStack.peek().equals(Lexicon.$) && nextToken.getType().equals(Lexicon.$)) {
+        if (nStack.empty() && nextToken.getType().equals(Lex.$)) {System.exit(0);}
+        if (pStack.peek().equals(Lex.$) && nextToken.getType().equals(Lex.$)) {
             run = false;
         }
     }
 
-    private ArrayList<Integer> getCharList() {
-        return tokenLst.get(0).getCharList();
+    private static boolean listContains(Lex type,Lex[] list) {
+        for (Lex item : list) {if (type==item) {return true;}}
+        return false;
     }
 
     private Token getNextToken() {

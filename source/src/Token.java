@@ -4,17 +4,17 @@ import java.util.ArrayList;
 public class Token {
     public int line;
     public int column;
-    private Lexicon type;
-    private Lexicon symbol;
+    private Lex type;
+    private Lex symbol;
     private ArrayList<Integer> charList = new ArrayList<>();
 
-    public Token(Lexicon type, ArrayList<Integer> newCharList) {
+    public Token(Lex type, ArrayList<Integer> charList) {
         this.type = type;
-        charList = setList(newCharList);
-        symbol = Lexicon.PLUS;
+        this.charList = setList(charList);
+        symbol = Lex.PLUS;
     }
 
-    public Lexicon getType() {
+    public Lex getType() {
         return type;
     }
 
@@ -34,13 +34,13 @@ public class Token {
         return charList.size();
     }
 
-    public Lexicon getSymbol() {
+    public Lex getSymbol() {
         return symbol;
     }
 
     public void flipSymbol() {
-        if (symbol.equals(Lexicon.PLUS)) {symbol = Lexicon.MINUS;}
-        else {symbol = Lexicon.PLUS;}
+        if (symbol.equals(Lex.PLUS)) {symbol = Lex.MINUS;}
+        else {symbol = Lex.PLUS;}
     }
 
     private ArrayList<Integer> setList(ArrayList<Integer> list) {

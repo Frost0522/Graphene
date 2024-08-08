@@ -27,15 +27,15 @@ public class Scanner {
         while (run) {
             try {
                 Token token = startState.process(stateLst, charLst, Scanner.next());
-                if (token.getType().equals(Lexicon.NL)) {++line; column = 1;}
-                else if (token.getType().equals(Lexicon.SKIP)) {++column;}
+                if (token.getType().equals(Lex.NL)) {++line; column = 1;}
+                else if (token.getType().equals(Lex.SKIP)) {++column;}
                 else {
                     token.column = column;
                     token.line = line;
                     column += token.getCharList().size();
                     tokenLst.add(token);
                 }
-                if (token.getType().equals(Lexicon.$)) {
+                if (token.getType().equals(Lex.$)) {
                     run = false;
                 }
                 charLst.clear();
