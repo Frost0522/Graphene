@@ -219,10 +219,10 @@ public class Analyzer extends Exception {
                 throw new Analyzer("Semantic Error: No main function was declared.");
             }
             case INTOPERROR: {
-                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Boolean operand cannot be used in an integer operation.");
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Boolean cannot be used in an integer operation.");
             }
             case BOOLOPERROR: {
-                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Integer operand cannot be used in a boolean operation.");
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Integer cannot be used in a boolean operation.");
             }
             case NULLOPERAND: {
                 throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Unassigned "+node.getErrorStr()+", check that the"+
@@ -244,16 +244,16 @@ public class Analyzer extends Exception {
         int line = childNode.position()[0]; int column = childNode.position()[1];
         switch (errorType) {
             case DIFFOPERANDS: {
-                if ((op=="+"||op=="-"||op=="/"||op=="*"||op=="<") && childNode.getSemanticType()==Lex.BOOLEAN) {
-                    throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Boolean operand cannot be used in an integer operation.");
+                if ((op.equals("+")||op.equals("-")||op.equals("/")||op.equals("*")||op.equals("<")) && childNode.getSemanticType()==Lex.BOOLEAN) {
+                    throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Boolean cannot be used in an integer operation.");
                 }
-                else if ((op=="and"||op=="or") && childNode.getSemanticType()==Lex.INTEGER) {
-                    throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Integer operand cannot be used in a boolean operation.");
+                else if ((op.equals("and")||op.equals("or")) && childNode.getSemanticType()==Lex.INTEGER) {
+                    throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Integer cannot be used in a boolean operation.");
                 }
                 else if (childNode.getSemanticType()==Lex.INTEGER) {
-                    throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Integer operand cannot equal boolean.");
+                    throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Integer cannot equal boolean.");
                 }
-                else {throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Boolean operand cannot equal Integer.");}
+                else {throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Boolean cannot equal Integer.");}
             }
         }
         throw new Analyzer("Unexpected Semantic Error.");
