@@ -246,7 +246,7 @@ class CallNode extends Node {
     protected Lex nodeType() {return Lex.FNCALL;}
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
-    protected String getErrorStr() {return id.toString();}
+    protected String getErrorStr() {return "function call "+"'"+id.toString().replace("identifier ","")+"'";}
 }
 
 class IfNode extends Node {

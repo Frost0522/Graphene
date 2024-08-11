@@ -22,7 +22,7 @@ public enum Lex {
 
     //Error types for symantic analyzer
     PRIMITIVEFN, PRIMITIVEPARAM, NOMAIN, INTOPERROR, BOOLOPERROR, NULLOPERAND, RETURNTYPEERROR,
-    DIFFOPERANDS;
+    DIFFOPERANDS, NOFNCALL;
 
     public int value() {
         switch (this) {

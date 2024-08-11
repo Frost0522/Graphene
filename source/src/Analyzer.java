@@ -235,25 +235,9 @@ public class Analyzer extends Exception {
                 }
                 throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Type mismatch between function return type and function body.");
             }
-        }
-        throw new Analyzer("Unexpected Semantic Error.");
-    }
-
-    // Error handling for the semantic checker, special case for binary nodes.
-    public Analyzer(Lex errorType, String op, Node childNode) throws Analyzer {
-        int line = childNode.position()[0]; int column = childNode.position()[1];
-        switch (errorType) {
-            case DIFFOPERANDS: {
-                if ((op.equals("+")||op.equals("-")||op.equals("/")||op.equals("*")||op.equals("<")) && childNode.getSemanticType()==Lex.BOOLEAN) {
-                    throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Boolean cannot be used in an integer operation.");
-                }
-                else if ((op.equals("and")||op.equals("or")) && childNode.getSemanticType()==Lex.INTEGER) {
-                    throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Integer cannot be used in a boolean operation.");
-                }
-                else if (childNode.getSemanticType()==Lex.INTEGER) {
-                    throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Integer cannot equal boolean.");
-                }
-                else {throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Boolean cannot equal Integer.");}
+            case NOFNCALL: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Unassigned "+node.getErrorStr()+", check that the function "+
+                                   "has been declared.");
             }
         }
         throw new Analyzer("Unexpected Semantic Error.");
