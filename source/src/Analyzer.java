@@ -239,6 +239,18 @@ public class Analyzer extends Exception {
                 throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Unassigned "+node.getErrorStr()+", check that the function "+
                                    "has been declared.");
             }
+            case MISSINGARGS: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: "+node.getErrorStr().substring(0,1).toUpperCase()+
+                                   node.getErrorStr().substring(1)+" is missing positional arguments.");
+            }
+            case TOOMANYARGS: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: "+node.getErrorStr().substring(0,1).toUpperCase()+
+                                   node.getErrorStr().substring(1)+" has too many positional arguments.");
+            }
+            case BADARGTYPE: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Function call does not take postional argument "+
+                                   node.getSemanticType().toString().toLowerCase()+".");
+            }
         }
         throw new Analyzer("Unexpected Semantic Error.");
     }
