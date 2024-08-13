@@ -82,7 +82,8 @@ public class AstPrinter implements AstVisitor {
             astStr.append(formatStr("function call"+"\n"));
             depth++;
             astStr.append(formatStr(callNode.getId().toString()));
-            astStr.append(formatStr("args"));
+            if (callNode.getArgs().isEmpty()) {astStr.append(formatStr("args",false));}
+            else {astStr.append(formatStr("args"));}
             depth--;
         }
         depth+=2;

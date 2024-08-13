@@ -341,13 +341,13 @@ class BinaryNode extends Node {
     protected int[] position() {return leftNode.position();}
     protected Node getLeft() {return leftNode;}
     protected Node getRight() {return rightNode;}
-    protected void accept(AstVisitor visitor) throws Analyzer {
-        visitor.visit(this);
-    }
     protected Lex nodeType() {return nodeType;}
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
     protected String getErrorStr() {return "";}
+    protected void accept(AstVisitor visitor) throws Analyzer {
+        visitor.visit(this);
+    }
 }
 
 class EqNode extends BinaryNode {public EqNode(Stack<Node> stack) {super(stack, "==", Lex.EQUIVALENT);}}
