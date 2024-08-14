@@ -24,7 +24,7 @@ In a terminal, navigate to the source directory and run the build command.
     - `graphene -f path_to_file/file_name` : Most recent compilation of only the parser's output (Validates Graphene files).
     - `graphene -p path_to_file/file_name` : Most recent compilation of only the parser's output (Prints mockup of Graphene files).
 
-Scripts for compiled Graphene source code the day of finishing a various stage of the compiler. *Unstable*
+Scripts for compiled Graphene source code the day of finishing a various stage of the compiler. *Unstable*.
 
 - `graphenes path_to_file/file_name` : Prints the tokens and their types 
 - `graphenef path_to_file/file_name` : Validates Graphene files
