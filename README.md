@@ -4,23 +4,31 @@ Welcome to Graphene, a purely functional language based on a small subset of Goo
 
 ## Folder Structure
 
-The workspace contains multiple folders by default, where:
-
-- `bin\src`    : location of compiled code
-- `documents`  : folder that has language specifications and implementation details.
-- `programs`   : .gr files containing various examples of Graphene code.
-- `source`     : contains build scripts for Windows and Linux.
-- `source\src` : where source code is located.
-- `tests`      : various Graphene test code used in debugging. 
+- `bin\src` : Location of compiled code.
+- `documents` : Folder that has language specifications and implementation details.
+- `programs` : .gr files containing various examples of Graphene code.
+- `source` : Contains build scripts for Windows and Linux.
+- `source\src` : Where source code is located.
+- `tests` : Various Graphene test code used in debugging. 
 
 ## How to build Graphene
 
-In a terminal, navigate to the source directory and run the build command. Once compiled there will be serveral usable commands.
+In a terminal, navigate to the source directory and run the build command.
 
-- `build -c /path_to_program/program_name'  : runs the most recently compiled source code
-- `build -gs /path_to_program/program_name' : 'graphenes' runs code for the scanner and outputs all tokens
-- `build -gf /path_to_program/program_name' : 'graphenef' executes the parser, before node implementation, and either throws an error or outputs true if the program is valid
-- `build -gp /path_to_program/program_name' : 'graphenep' is the parser, after node implementation, that uses an object to print out the node stack
+- `build` : This is how you compile source code and generate scripts to run Graphene.
+   - `build -reload` : Reloads main build script and updates any changes to graphene scripts (Windows)
+   - `build --reload` : Reloads main build script and updates any changes to graphene scripts (Linux)
+
+- `graphene path_to_file/file_name` : Most recent compilation of the source code.
+    - `graphene -s path_to_file/file_name` : Most recent compilation of only the scanner's output (Prints the tokens and their types).
+    - `graphene -f path_to_file/file_name` : Most recent compilation of only the parser's output (Validates Graphene files).
+    - `graphene -p path_to_file/file_name` : Most recent compilation of only the parser's output (Prints mockup of Graphene files).
+
+Scripts for compiled Graphene source code the day of finishing a various stage of the compiler. *Unstable*
+
+- `graphenes path_to_file/file_name` : Prints the tokens and their types 
+- `graphenef path_to_file/file_name` : Validates Graphene files
+- `graphenep path_to_file/file_name` : Prints mockup of Graphene files
 
 ## To-Do
 
