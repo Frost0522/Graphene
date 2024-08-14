@@ -63,30 +63,30 @@ public class SemanticAnalyzer implements AstVisitor {
 
         switch (binNode.nodeType()) {
             case PLUS,MINUS,DIVIDE,TIMES: {
-                if (leftType==null) {new Analyzer(Lex.NULLOPERAND,binNode.getLeft());}
-                else if (rightType==null) {new Analyzer(Lex.NULLOPERAND,binNode.getRight());}
+                if (leftType==null) {new Analyzer(Lex.NOID,binNode.getLeft());}
+                else if (rightType==null) {new Analyzer(Lex.NOID,binNode.getRight());}
                 else if (leftType==Lex.BOOLEAN) {new Analyzer(Lex.INTOPERROR,binNode.getLeft());}
                 else if (rightType==Lex.BOOLEAN) {new Analyzer(Lex.INTOPERROR,binNode.getRight());}
                 binNode.setSemanticType(Lex.INTEGER);
                 break;
             }
             case AND,OR: {
-                if (leftType==null) {new Analyzer(Lex.NULLOPERAND,binNode.getLeft());}
-                else if (rightType==null) {new Analyzer(Lex.NULLOPERAND,binNode.getRight());}
+                if (leftType==null) {new Analyzer(Lex.NOID,binNode.getLeft());}
+                else if (rightType==null) {new Analyzer(Lex.NOID,binNode.getRight());}
                 else if (leftType==Lex.INTEGER) {new Analyzer(Lex.BOOLOPERROR,binNode.getLeft());}
                 else if (rightType==Lex.INTEGER) {new Analyzer(Lex.BOOLOPERROR,binNode.getRight());}
                 binNode.setSemanticType(Lex.BOOLEAN);
                 break;
             }
             case EQUIVALENT: {
-                if (leftType==null) {new Analyzer(Lex.NULLOPERAND,binNode.getLeft());}
-                else if (rightType==null) {new Analyzer(Lex.NULLOPERAND,binNode.getRight());}
+                if (leftType==null) {new Analyzer(Lex.NOID,binNode.getLeft());}
+                else if (rightType==null) {new Analyzer(Lex.NOID,binNode.getRight());}
                 binNode.setSemanticType(Lex.BOOLEAN);
                 break;
             }
             case LESSTHAN: {
-                if (leftType==null) {new Analyzer(Lex.NULLOPERAND,binNode.getLeft());}
-                else if (rightType==null) {new Analyzer(Lex.NULLOPERAND,binNode.getRight());}
+                if (leftType==null) {new Analyzer(Lex.NOID,binNode.getLeft());}
+                else if (rightType==null) {new Analyzer(Lex.NOID,binNode.getRight());}
                 else if (leftType==Lex.BOOLEAN) {new Analyzer(Lex.INTOPERROR,binNode.getLeft());}
                 else if (rightType==Lex.BOOLEAN) {new Analyzer(Lex.INTOPERROR,binNode.getRight());}
                 binNode.setSemanticType(Lex.BOOLEAN);
@@ -105,7 +105,7 @@ public class SemanticAnalyzer implements AstVisitor {
                 arg.accept(this);
                 // Verify existence of ids in function call arguments.
                 if (arg instanceof IdNode && (!table.idExists(currentFnNode, arg))) {
-                    new Analyzer(Lex.NULLOPERAND,arg);
+                    new Analyzer(Lex.NOID,arg);
                 }
             }
         }
@@ -131,7 +131,7 @@ public class SemanticAnalyzer implements AstVisitor {
                 arg.accept(this);
                 // Verify existence of ids in function call arguments.
                 if (arg instanceof IdNode && (!table.idExists(currentFnNode, arg))) {
-                    new Analyzer(Lex.NULLOPERAND,arg);
+                    new Analyzer(Lex.NOID,arg);
                 }
             }
             // Verify type correctness for the arguments of the call to the function it is referncing.
@@ -145,11 +145,42 @@ public class SemanticAnalyzer implements AstVisitor {
 
     @Override
     public void visit(IfNode ifNode) throws Analyzer {
+        // Begin type check of if clause.
         ifNode.getIf().accept(this);
-        // Make sure the if condition is of type boolean.
         if (ifNode.getIf().getSemanticType()!=Lex.BOOLEAN) {
             new Analyzer(Lex.IFOPERROR,ifNode.getIf());
         }
+        // End of if clause.
+        // Begin type checks of then clause.
+        ifNode.getThen().accept(this);
+        if (ifNode.getThen() instanceof CallNode && ifNode.getThen().getSemanticType()==null) {
+            new Analyzer(Lex.NOFNCALL,ifNode.getThen());
+        }
+        else if (ifNode.getThen() instanceof IdNode && ifNode.getThen().getSemanticType()==null) {
+            new Analyzer(Lex.NOID,ifNode.getThen());
+        }
+        // End of then clause.
+        // Begin type checks of else clause.
+        ifNode.getElse().accept(this);
+        if (ifNode.getElse() instanceof CallNode && ifNode.getElse().getSemanticType()==null) {
+            new Analyzer(Lex.NOFNCALL,ifNode.getElse());
+        }
+        else if (ifNode.getElse() instanceof IdNode && ifNode.getElse().getSemanticType()==null) {
+            new Analyzer(Lex.NOID,ifNode.getElse());
+        }
+        // End of else clause.
+        // Finally check then and else clause match, if so set if node semantic type, else error.
+        if (ifNode.getThen().getSemanticType()==ifNode.getElse().getSemanticType()) {
+            ifNode.setSemanticType(ifNode.getThen().getSemanticType());
+        }
+        else {new Analyzer(Lex.DIFFCLAUSES,ifNode.getThen());} 
+
+    }
+
+    @Override
+    public void visit(ExpNode expNode) throws Analyzer {
+        expNode.getNode().accept(this);
+        expNode.setSemanticType(expNode.getNode().getSemanticType());
     }
 
     @Override
