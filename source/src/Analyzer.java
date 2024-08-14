@@ -224,7 +224,7 @@ public class Analyzer extends Exception {
             case BOOLOPERROR: {
                 throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Integer cannot be used in a boolean operation.");
             }
-            case NULLOPERAND: {
+            case NOID: {
                 throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Unassigned "+node.getErrorStr()+", check that the"+
                                    " parameter has been declared.");
             }
@@ -253,6 +253,9 @@ public class Analyzer extends Exception {
             }
             case IFOPERROR: {
                 throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: If conditions must be of type boolean.");
+            }
+            case DIFFCLAUSES: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Type mismatch between then and else clauses.");
             }
         }
         throw new Analyzer("Unexpected Semantic Error.");
