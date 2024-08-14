@@ -1,66 +1,111 @@
 #!/bin/bash
 
-build() {
-   printf "Manifest-Version: 1.0""\n""Main-Class: src.Main""\n" > ./MANIFEST.MF;
-   javac ./src/*java
-   jar cfm ./current.jar ./MANIFEST.MF ./src/*.class
-   mv ./current.jar ../bin/src; rm ./MANIFEST.MF; rm ./src/*class;
+# Function to display error messages and exit
+function error_exit {
+    echo "$1" 1>&2
+    exit 1
 }
 
-current() {
-   posArgCheck
-   java -jar ../bin/src/current.jar $file "graphenev"
+# Function to create or update scripts
+function create_or_update_script {
+    local fileName="$1"
+    local content="$2"
+    local filePath="./$fileName"
+    if [ "$reload" = true ]; then
+        echo "$content" > "$filePath"
+        echo "Reloaded script: $filePath"
+    else
+        if [ ! -f "$filePath" ]; then
+            echo "$content" > "$filePath"
+            echo "Generated script: $filePath"
+        fi
+    fi
 }
 
-programs() {
-for file in ../programs/*; do
-   java ./src/Main.java "${file%.*}" "graphenev"
+# Argument for file path
+file=$1
+# Default value
+reload=false
+
+# Parse command-line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --reload) reload=true; shift; ;;
+        *) error_exit "Invalid option: $1" ;;
+    esac
 done
+
+# Script contents
+grapheneContent='#!/bin/bash
+# Function to display error messages and exit
+function error_exit {
+    echo "$1" 1>&2
+    exit 1
 }
 
-tests() {
-for file in ../tests/*; do
-   java ./src/Main.java "${file%.*}" "graphenev"
+# Default mode
+mode="graphenev"
+
+# Check for arguments
+while getopts ":sfp:" opt; do
+    case ${opt} in
+        s ) mode="graphenes"; shift $((OPTIND -1)) ;;
+        f ) mode="graphenef"; shift $((OPTIND -1)) ;;
+        p )mode="graphenep"; shift $((OPTIND -2)) ;;
+        : )error_exit "Invalid option: -$OPTARG requires an argument" ;;
+        \? ) error_exit "Invalid option: -$OPTARG" ;;
+    esac
 done
-}
 
-graphenes() {
-   posArgCheck
-   java -jar ../bin/src/graphenes.jar $file "graphenes"
-}
+file=$1
+if [ -z "$file" ]; then
+    error_exit "A positional argument for a Graphene file name must be provided."
+fi
 
-graphenef() {
-   posArgCheck
-   java -jar ../bin/src/graphenef.jar $file "graphenef"
-}
+# Run the Java program with the correct mode
+java -jar ../bin/src/graphene.jar "$file" "$mode"
+'
 
-graphenep() {
-   posArgCheck
-   java -jar ../bin/src/graphenep.jar $file "graphenep"
-}
+graphenesContent='#!/bin/bash
+file="$1"
+if [ -z "$file" ]; then
+    echo "A positional argument for a Graphene file name must be provided." 1>&2
+    exit 1
+fi
+java -jar ../bin/src/graphenes.jar "$file" "graphenes"
+'
 
-posArgCheck() {
-   if [ ! $file ]; then
-      case $option in
-         -c) echo "Current build requires positional argument to file path."; exit 1; ;;
-         -gs) echo "Graphenes requires second positional argument to file path."; exit 1; ;;
-         -gp) echo "Graphenep requires second positional argument to file path."; exit 1; ;; 
-         -gf) echo "Graphenef requires second positional argument to file path."; exit 1; ;;
-         "") ;;
-      esac
-      exit 1
-   fi
-}
+graphenefContent='#!/bin/bash
+file="$1"
+if [ -z "$file" ]; then
+    echo "A positional argument for a Graphene file name must be provided." 1>&2
+    exit 1
+fi
+java -jar ../bin/src/graphenef.jar "$file" "graphenef"
+'
 
-option=$1
+graphenepContent='#!/bin/bash
+file="$1"
+if [ -z "$file" ]; then
+    echo "A positional argument for a Graphene file name must be provided." 1>&2
+    exit 1
+fi
+java -jar ../bin/src/graphenep.jar "$file" "graphenep"
+'
 
-case $option in
-   -c) file=$2; current ;;
-   -p) programs ;;
-   -t) tests ;;
-   -gs) file=$2; graphenes ;;
-   -gp) file=$2; graphenep ;;
-   -gf) file=$2; graphenef ;;
-   "") build ;;
-   *) echo "Not a valid build argument." ;;
-esac
+# Create or update the scripts
+create_or_update_script "graphene.sh" "$grapheneContent"
+create_or_update_script "graphenes.sh" "$graphenesContent"
+create_or_update_script "graphenef.sh" "$graphenefContent"
+create_or_update_script "graphenep.sh" "$graphenepContent"
+
+# If reload was not requested, compile source code
+if [ "$reload" = false ]; then
+    javac -d ./out ./src/*.java
+    jar cfe "graphene.jar" src.Main -C ./out .
+    mv "./graphene.jar" "../bin/src"
+    rm -rf ./out
+    echo "Compilation completed successfully."
+else
+    echo "Scripts reloaded successfully."
+fi
