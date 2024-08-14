@@ -5,12 +5,12 @@ import java.util.ArrayList;
 
 public class Scanner {
     
-    public ArrayList<State> stateLst = new ArrayList<>();
-    public ArrayList<Integer> charLst = new ArrayList<>();
-    public ArrayList<Token> tokenLst = new ArrayList<>();
-    public int line = 1;
-    public int column = 1;
-    public static PushbackReader pushReader;
+    protected ArrayList<State> stateLst = new ArrayList<>();
+    protected ArrayList<Integer> charLst = new ArrayList<>();
+    protected ArrayList<Token> tokenLst = new ArrayList<>();
+    protected int line = 1;
+    protected int column = 1;
+    protected static PushbackReader pushReader;
 
     public Scanner(PushbackReader reader) throws Analyzer, IOException {
         pushReader = reader;
@@ -47,13 +47,30 @@ public class Scanner {
         }
     }
 
-    public static int next() throws IOException {
+    protected static int next() throws IOException {
         return pushReader.read();
     }
 
-    public static int peek() throws IOException {
+    protected static int peek() throws IOException {
         int value = pushReader.read();
         pushReader.unread(value);
         return value;
+    }
+
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        for (Token t : tokenLst) {
+            switch (t.getType()) {
+                case FN,INTEGER,BOOLEAN,IF,ELSE: {builder.append("keyword "+t.getName().toLowerCase()+"\n"); break;}
+                case TIMES,DIVIDE,MINUS,PLUS,LESSTHAN,EQUIVALENT,AND,OR,NOT: {builder.append("operator "+t.getName()+"\n"); break;}
+                case ID: {builder.append("identifier "+t.getName()+"\n"); break;}
+                case LEFTPAREN,RIGHTPAREN,COLON,COMMA,RETURN: {builder.append("punctuation "+t.getName()+"\n"); break;}
+                case INTEGERLITERAL: {builder.append("integer literal "+t.getName()+"\n"); break;}
+                case BOOLEANLITERAL: {builder.append("boolean literal "+t.getName()+"\n"); break;}
+                case $: {builder.append("end of file $"); break;}
+                default: break;
+            }
+        }
+        return builder.toString().trim();
     }
 }

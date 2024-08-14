@@ -26,6 +26,14 @@ public class Token {
         return column;
     }
 
+    public String getName() {
+        StringBuilder builder = new StringBuilder();
+        for (int i : charList) {
+            builder.append((char)i);
+        }
+        return builder.toString();
+    }
+
     public ArrayList<Integer> getCharList() {
         return charList;
     }
