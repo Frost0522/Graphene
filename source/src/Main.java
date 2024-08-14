@@ -23,9 +23,7 @@ public class Main {
         switch (input.scriptType) {
             case "graphenes": {
                 Scanner scanner = new Scanner(pushReader);
-                for (Token token : scanner.tokenLst) {
-                    System.out.println(token.getType());
-                }
+                System.out.println(scanner);
                 break;
             }
             case "graphenef": {
