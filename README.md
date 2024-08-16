@@ -16,13 +16,13 @@ Welcome to Graphene, a purely functional language based on a small subset of Goo
 In a terminal, navigate to the source directory and run the build command.
 
 - `build` : This is how you compile source code and generate scripts to run Graphene.
-   - `build -reload` : Reloads main build script and updates any changes to graphene scripts (Windows)
-   - `build --reload` : Reloads main build script and updates any changes to graphene scripts (Linux)
+   - `build -reload` : Reloads main build script and updates any changes to graphene scripts
 
 - `graphene path_to_file/file_name` : Most recent compilation of the source code.
     - `graphene -s path_to_file/file_name` : Most recent compilation of only the scanner's output (Prints the tokens and their types).
     - `graphene -f path_to_file/file_name` : Most recent compilation of only the parser's output (Validates Graphene files).
     - `graphene -p path_to_file/file_name` : Most recent compilation of only the parser's output (Prints mockup of Graphene files).
+    - `graphene -allPrograms` : Runs most recent compilation of source code against all Graphene files in the programs directory (Windows only at the moment).
 
 Scripts for compiled Graphene source code the day of finishing a various stage of the compiler. *Unstable*.
 
