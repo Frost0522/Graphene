@@ -203,7 +203,7 @@ public class Analyzer extends Exception {
         }
     }
 
-    // Error handling for the semantic checker.
+    // Error handling for the semantic analyzer.
     public Analyzer(Lex errorType, Node node) throws Analyzer {
         int line = node.position()[0]; int column = node.position()[1];
         switch (errorType) {
@@ -257,7 +257,23 @@ public class Analyzer extends Exception {
             case DIFFCLAUSES: {
                 throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Type mismatch between then and else clauses.");
             }
+            case FNNAMECONFLICT: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Function '"+node.toString().replace("identifier ","")+
+                                   "' has already been declared.");
+            }
+            case PARAMNAMECONFLICT: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Parameter '"+node.toString().replace("identifier ","")+
+                                   "' has already been declared in this function.");
+            }
         }
-        throw new Analyzer("Unexpected Semantic Error.");
+
+        // Warning messages
+        if (errorType==Lex.UNUSEDFN) {
+            System.out.println("Line "+line+" Column "+column+"\nWarning: Function '"+node.toString().replace("identifier ","")+"' is never used.");
+        }
+        else if (errorType==Lex.UNUSEDPARAM) {
+            System.out.println("Line "+line+" Column "+column+"\nWarning: Parameter '"+node.toString().replace("identifier ","")+"' is never used.");
+        }
+        else {throw new Analyzer("Unexpected Semantic Error.");}
     }
 }

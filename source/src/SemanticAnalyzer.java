@@ -13,8 +13,8 @@ public class SemanticAnalyzer implements AstVisitor {
 
     @Override
     public void visit(PrgrmNode prgrmNode) throws Analyzer {
-        table = new SymbolTable(prgrmNode);
         try {
+            table = new SymbolTable(prgrmNode);
             for (Node fnNode : prgrmNode.getFunctions()) {
                 fnNode.accept(this);
             }
@@ -29,6 +29,9 @@ public class SemanticAnalyzer implements AstVisitor {
 
     @Override
     public void visit(FnNode fnNode) throws Analyzer {
+        if (!table.getAllCalls.contains(fnNode.getIdNode().toString())) {
+            new Analyzer(Lex.UNUSEDFN,fnNode.getIdNode());
+        }
         currentFnNode = fnNode;
         fnNode.getIdNode().accept(this);
         // Check function calls are not named after primitives
@@ -196,9 +199,9 @@ public class SemanticAnalyzer implements AstVisitor {
     public void visit(IdNode idNode) {
         // If the id node matches a parameter in the parameter list, set it's type
         if (idNode.getSemanticType()==null) {
-            int idIndex = table.getMap().get(currentFnNode).getIdStrings().indexOf(idNode.toString());
+            int idIndex = table.getMap().get(currentFnNode).getParamStrings().indexOf(idNode.toString());
             if (idIndex!=-1) {
-                idNode.setSemanticType(table.getMap().get(currentFnNode).getIdNodes().get(idIndex).getSemanticType());
+                idNode.setSemanticType(table.getMap().get(currentFnNode).getParamNodes().get(idIndex).getSemanticType());
             }
         }
         currentIdNode = idNode;
@@ -207,7 +210,6 @@ public class SemanticAnalyzer implements AstVisitor {
 
 class SymbolTable implements AstVisitor {
 
-    // private ArrayList<FnNode> fnList = new ArrayList<>();
     private HashMap<FnNode,FunctionSymbol> map = new HashMap<>();
     private FunctionSymbol fnSymbol = new FunctionSymbol();
     private TypeNode currentTypeNode;
@@ -219,11 +221,11 @@ class SymbolTable implements AstVisitor {
 
     protected HashMap<FnNode,FunctionSymbol> getMap() {return map;}
     protected boolean idExists(FnNode fnNode, Node node) {
-        if (map.get(fnNode).getIdStrings().contains(node.toString())) {
+        if (map.get(fnNode).getParamStrings().contains(node.toString())) {
             return true;
-        }
-        return false;
+        } return false;
     }
+    protected ArrayList<String> getAllCalls = new ArrayList<>();
 
     @Override
     public void visit(PrgrmNode prgrmNode) throws Analyzer {
@@ -234,12 +236,22 @@ class SymbolTable implements AstVisitor {
 
     @Override
     public void visit(FnNode fnNode) throws Analyzer {
+        for (FnNode key : map.keySet()) {
+            if (key.getIdNode().toString().equals(fnNode.getIdNode().toString())) {
+                new Analyzer(Lex.FNNAMECONFLICT,fnNode.getIdNode());
+            }
+        }
         fnSymbol = new FunctionSymbol();
         for (Node paramNode : fnNode.getParamNodes()) {
             paramNode.accept(this);
         }
         for (Node bodyNode : fnNode.getBodyNodes()) {
             bodyNode.accept(this);
+        }
+        for (IdNode param : fnSymbol.getParamNodes()) {
+            if (!fnSymbol.getidStrings().contains(param.toString())) {
+                new Analyzer(Lex.UNUSEDPARAM,param);
+            }
         }
         map.put(fnNode, fnSymbol);
     }
@@ -248,14 +260,18 @@ class SymbolTable implements AstVisitor {
     public void visit(ParamNode paramNode) throws Analyzer {
         paramNode.getLeft().accept(this);
         paramNode.getRight().accept(this);
+        if (fnSymbol.getParamStrings().contains(currentIdNode.toString())) {
+            new Analyzer(Lex.PARAMNAMECONFLICT,currentIdNode);
+        }
         currentIdNode.setSemanticType(currentTypeNode.getType());
-        fnSymbol.addIdNode(currentIdNode);
+        fnSymbol.addParamNode(currentIdNode);
         fnSymbol.addIdType(currentTypeNode.getType());
     }
 
     @Override
     public void visit(CallNode callNode) throws Analyzer {
         callNode.getId().accept(this);
+        getAllCalls.add(currentIdNode.toString());
         // Add id node of primitive function call print to function symbol
         if (currentIdNode.getName().equals("print")) {fnSymbol.addPrintNode(currentIdNode);}
         for (Node arg : callNode.getArgs()) {
@@ -287,6 +303,7 @@ class SymbolTable implements AstVisitor {
 
     @Override
     public void visit(IdNode idNode) {
+        if (fnSymbol.getParamStrings().contains(idNode.toString())) {fnSymbol.addIdNode(idNode);}
         currentIdNode = idNode;
     }
 
@@ -297,21 +314,26 @@ class SymbolTable implements AstVisitor {
 
     class FunctionSymbol {
 
-        private ArrayList<IdNode> idNodes;
+        private ArrayList<IdNode> paramNodes;
         private ArrayList<Lex> idTypes;
         private ArrayList<IdNode> printNodes;
+        private ArrayList<IdNode> idNodes;
 
         public FunctionSymbol() {
+            this.paramNodes = new ArrayList<>();
             this.idNodes = new ArrayList<>();
             this.idTypes = new ArrayList<>();
             this.printNodes = new ArrayList<>();
+            this.paramNodes = new ArrayList<>();
         }
         
-        protected void addIdNode(IdNode idNode) {idNodes.add(idNode);}
-        protected void addIdType(Lex type) {idTypes.add(type);}
-        protected void addPrintNode(IdNode printNode) {printNodes.add(printNode);}
-        protected ArrayList<IdNode> getIdNodes() {return idNodes;}
-        protected ArrayList<String> getIdStrings() {return getIdNodes().stream().map(IdNode::toString).collect(Collectors.toCollection(ArrayList::new));}
+        private void addParamNode(IdNode paramNode) {paramNodes.add(paramNode);}
+        private void addIdType(Lex type) {idTypes.add(type);}
+        private void addPrintNode(IdNode printNode) {printNodes.add(printNode);}
+        private void addIdNode(IdNode idNode) {idNodes.add(idNode);}
+        private ArrayList<String> getidStrings () {return idNodes.stream().map(IdNode::toString).collect(Collectors.toCollection(ArrayList::new));}
+        protected ArrayList<IdNode> getParamNodes() {return paramNodes;}
+        protected ArrayList<String> getParamStrings() {return paramNodes.stream().map(IdNode::toString).collect(Collectors.toCollection(ArrayList::new));}
         protected ArrayList<Lex> getIdTypes() {return idTypes;}
         protected ArrayList<IdNode> getPrintNodes() {return printNodes;}
     }
