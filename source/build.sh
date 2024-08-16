@@ -30,7 +30,7 @@ reload=false
 # Parse command-line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --reload) reload=true; shift; ;;
+        -reload) reload=true; shift; ;;
         *) error_exit "Invalid option: $1" ;;
     esac
 done
