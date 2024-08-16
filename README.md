@@ -22,7 +22,7 @@ In a terminal, navigate to the source directory and run the build command.
     - `graphene -s path_to_file/file_name` : Most recent compilation of only the scanner's output (Prints the tokens and their types).
     - `graphene -f path_to_file/file_name` : Most recent compilation of only the parser's output (Validates Graphene files).
     - `graphene -p path_to_file/file_name` : Most recent compilation of only the parser's output (Prints mockup of Graphene files).
-    - `graphene -allPrograms` : Runs most recent compilation of source code against all Graphene files in the programs directory (Windows only at the moment).
+    - `graphene -allPrograms` : Runs most recent compilation of source code against all Graphene files in the programs directory.
 
 Scripts for compiled Graphene source code the day of finishing a various stage of the compiler. *Unstable*.
 
@@ -62,3 +62,5 @@ Scripts for compiled Graphene source code the day of finishing a various stage o
 - `updated parsing errors` : Previously, when specifying the type on a parameter, if the type was either misspelled or forgotten, an incorrect error would be thrown stating the function return type is undefined.
 
 - `current scanner output` : I accidentally forgot to make sure that the current scanners output functioned the same as it previously had. Running 'graphenes' (previous) and 'graphene -s' (current) now yield the same output.
+
+- `improper warnings` : A warning was being given for the main function not being used in a program. Of the functions that should be warned, main is not one of them, since it is the entry point of the program and must exist unless no other functions are given.
