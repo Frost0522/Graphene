@@ -89,7 +89,9 @@ public class AstPrinter implements AstVisitor {
         depth+=2;
         for (Node arg : callNode.getArgs()) {
             arg.accept(this);
-            if (!(arg==callNode.getArgs().getLast())) {astStr.append("\n");}
+            if (arg!=callNode.getArgs().getLast()) {
+                astStr.append("\n");
+            }
         }
         depth-=2;
 
