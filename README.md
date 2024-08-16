@@ -60,3 +60,5 @@ Scripts for compiled Graphene source code the day of finishing a various stage o
 - `issues with identifiers` : When naming an identifier, if you were to lead, or trail behind, with characters recognized as keywords, an early syntax error would be thrown. As a consequence, an extra check has been added to State_1.
 
 - `updated parsing errors` : Previously, when specifying the type on a parameter, if the type was either misspelled or forgotten, an incorrect error would be thrown stating the function return type is undefined.
+
+- `current scanner output` : I accidentally forgot to make sure that the current scanners output functioned the same as it previously had. Running 'graphenes' (previous) and 'graphene -s' (current) now yield the same output.
