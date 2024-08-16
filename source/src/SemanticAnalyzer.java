@@ -29,7 +29,8 @@ public class SemanticAnalyzer implements AstVisitor {
 
     @Override
     public void visit(FnNode fnNode) throws Analyzer {
-        if (!table.getAllCalls.contains(fnNode.getIdNode().toString())) {
+        if (!(table.getAllCalls.contains(fnNode.getIdNode().toString()) ||
+            fnNode.getIdNode().toString().equals("identifier main"))) {
             new Analyzer(Lex.UNUSEDFN,fnNode.getIdNode());
         }
         currentFnNode = fnNode;
