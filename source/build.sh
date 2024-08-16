@@ -1,111 +1,125 @@
 #!/bin/bash
 
-# Function to display error messages and exit
-function error_exit {
-    echo "$1" 1>&2
-    exit 1
-}
-
-# Function to create or update scripts
-function create_or_update_script {
-    local fileName="$1"
-    local content="$2"
-    local filePath="./$fileName"
-    if [ "$reload" = true ]; then
-        echo "$content" > "$filePath"
-        echo "Reloaded script: $filePath"
-    else
-        if [ ! -f "$filePath" ]; then
-            echo "$content" > "$filePath"
-            echo "Generated script: $filePath"
-        fi
-    fi
-}
-
-# Argument for file path
-file=$1
-# Default value
+# Optional bind to update scripts
 reload=false
+isGenerated=false
 
-# Parse command-line arguments
-while [[ $# -gt 0 ]]; do
+# Parse arguments
+while [[ "$#" -gt 0 ]]; do
     case $1 in
-        -reload) reload=true; shift; ;;
-        *) error_exit "Invalid option: $1" ;;
+        -reload) reload=true ;;
+        *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
+    shift
 done
 
-# Script contents
-grapheneContent='#!/bin/bash
-# Function to display error messages and exit
-function error_exit {
-    echo "$1" 1>&2
-    exit 1
-}
+# Script content
+grapheneContent='
+#!/bin/bash
+s=false
+f=false
+p=false
+allPrograms=false
+file=""
 
-# Default mode
-mode="graphenev"
-
-# Check for arguments
-while getopts ":sfp:" opt; do
-    case ${opt} in
-        s ) mode="graphenes"; shift $((OPTIND -1)) ;;
-        f ) mode="graphenef"; shift $((OPTIND -1)) ;;
-        p )mode="graphenep"; shift $((OPTIND -2)) ;;
-        : )error_exit "Invalid option: -$OPTARG requires an argument" ;;
-        \? ) error_exit "Invalid option: -$OPTARG" ;;
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -s) s=true ;;
+        -f) f=true ;;
+        -p) p=true ;;
+        -allPrograms) allPrograms=true ;;
+        *) file="$1" ;;
     esac
+    shift
 done
 
-file=$1
-if [ -z "$file" ]; then
-    error_exit "A positional argument for a Graphene file name must be provided."
+if $s; then
+    if [ -z "$file" ]; then echo "A positional argument for a Graphene file name must be provided."; exit 1; fi
+    java -jar ../bin/src/graphene.jar "$file" "graphenes"
+elif $f; then
+    if [ -z "$file" ]; then echo "A positional argument for a Graphene file name must be provided."; exit 1; fi
+    java -jar ../bin/src/graphene.jar "$file" "graphenef"
+elif $p; then
+    if [ -z "$file" ]; then echo "A positional argument for a Graphene file name must be provided."; exit 1; fi
+    java -jar ../bin/src/graphene.jar "$file" "graphenep"
+elif $allPrograms; then
+    if [ -n "$file" ]; then echo "No positional argument needed."; exit 1; fi
+    for file in ../programs/*.gr; do
+        java -jar ../bin/src/graphene.jar "${file%.*}" "graphenev"
+    done
+else
+    if [ -z "$file" ]; then echo "A positional argument for a Graphene file name must be provided."; exit 1; fi
+    java -jar ../bin/src/graphene.jar "$file" "graphenev"
 fi
-
-# Run the Java program with the correct mode
-java -jar ../bin/src/graphene.jar "$file" "$mode"
 '
 
-graphenesContent='#!/bin/bash
+graphenesContent='
+#!/bin/bash
 file="$1"
-if [ -z "$file" ]; then
-    echo "A positional argument for a Graphene file name must be provided." 1>&2
-    exit 1
-fi
+if [ -z "$file" ]; then echo "A positional argument for a Graphene file name must be provided."; exit 1; fi
 java -jar ../bin/src/graphenes.jar "$file" "graphenes"
 '
 
-graphenefContent='#!/bin/bash
+graphenefContent='
+#!/bin/bash
 file="$1"
-if [ -z "$file" ]; then
-    echo "A positional argument for a Graphene file name must be provided." 1>&2
-    exit 1
-fi
+if [ -z "$file" ]; then echo "A positional argument for a Graphene file name must be provided."; exit 1; fi
 java -jar ../bin/src/graphenef.jar "$file" "graphenef"
 '
 
-graphenepContent='#!/bin/bash
+graphenepContent='
+#!/bin/bash
 file="$1"
-if [ -z "$file" ]; then
-    echo "A positional argument for a Graphene file name must be provided." 1>&2
-    exit 1
-fi
+if [ -z "$file" ]; then echo "A positional argument for a Graphene file name must be provided."; exit 1; fi
 java -jar ../bin/src/graphenep.jar "$file" "graphenep"
 '
 
-# Create or update the scripts
-create_or_update_script "graphene.sh" "$grapheneContent"
-create_or_update_script "graphenes.sh" "$graphenesContent"
-create_or_update_script "graphenef.sh" "$graphenefContent"
-create_or_update_script "graphenep.sh" "$graphenepContent"
+# Function to make scripts
+function MakeScript() {
+    local fileName="$1"
+    local content="$2"
+    if [ ! -f "$fileName" ]; then
+        echo "$content" > "$fileName"
+        chmod +x "$fileName"
+        echo "Generated script: $fileName"
+        isGenerated=true
+    fi
+}
 
-# If reload was not requested, compile source code
-if [ "$reload" = false ]; then
+# Function to reload scripts
+function ReloadScript() {
+    local fileName="$1"
+    local content="$2"
+    if [ -f "$fileName" ]; then
+        echo "$content" > "$fileName"
+        chmod +x "$fileName"
+    fi
+}
+
+# Create the scripts
+MakeScript "graphene.sh" "$grapheneContent"
+MakeScript "graphenes.sh" "$graphenesContent"
+MakeScript "graphenef.sh" "$graphenefContent"
+MakeScript "graphenep.sh" "$graphenepContent"
+
+# Output for fresh build
+if [ "$isGenerated" = true ]; then
+    echo "All scripts have been generated successfully."
+fi
+
+if [ "$reload" = true ]; then
+    ReloadScript "graphene.sh" "$grapheneContent"
+    ReloadScript "graphenes.sh" "$graphenesContent"
+    ReloadScript "graphenef.sh" "$graphenefContent"
+    ReloadScript "graphenep.sh" "$graphenepContent"
+    echo "Reloading scripts."
+else
+    # Compile source code
+    mkdir -p out
     javac -d ./out ./src/*.java
     jar cfe "graphene.jar" src.Main -C ./out .
-    mv "./graphene.jar" "../bin/src"
+    mv -f "./graphene.jar" "../bin/src"
     rm -rf ./out
+
     echo "Compilation completed successfully."
-else
-    echo "Scripts reloaded successfully."
 fi
