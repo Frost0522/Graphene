@@ -49,7 +49,7 @@ fn add_boolean(m : integer, n : integer) -> integer
 
 // functions dealing with numbers as sequences as digits
 
-fn is_palindrome(n : integer) -> integer
+fn is_palindrome(n : integer) -> boolean
    n == reverse(n)
 
 fn reverse(n : integer) -> integer
