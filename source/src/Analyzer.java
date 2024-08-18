@@ -269,10 +269,10 @@ public class Analyzer extends Exception {
 
         // Warning messages
         if (errorType==Lex.UNUSEDFN) {
-            System.out.println("Line "+line+" Column "+column+"\nWarning: Function '"+node.toString().replace("identifier ","")+"' is never used.");
+            System.out.println("Warning @"+line+":"+column+" -> Function '"+node.toString().replace("identifier ","")+"' is never used.");
         }
         else if (errorType==Lex.UNUSEDPARAM) {
-            System.out.println("Line "+line+" Column "+column+"\nWarning: Parameter '"+node.toString().replace("identifier ","")+"' is never used.");
+            System.out.println("Warning @"+line+":"+column+" -> Parameter '"+node.toString().replace("identifier ","")+"' is never used.");
         }
         else {throw new Analyzer("Unexpected Semantic Error.");}
     }

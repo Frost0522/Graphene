@@ -22,16 +22,19 @@ public class Main {
         PushbackReader pushReader = new PushbackReader(grapheneFile);
         switch (input.scriptType) {
             case "graphenes": {
+                System.out.println(args[0]);
                 Scanner scanner = new Scanner(pushReader);
                 System.out.println(scanner);
                 break;
             }
             case "graphenef": {
+                System.out.println(args[0]);
                 Scanner scanner = new Scanner(pushReader);
                 new Parser(scanner); System.out.println(true);
                 break;
             }
             case "graphenep": {
+                System.out.println(args[0]);
                 Scanner scanner = new Scanner(pushReader);
                 Parser parser = new Parser(scanner);
                 AstPrinter astPrinter = new AstPrinter();
@@ -40,12 +43,13 @@ public class Main {
                 break;
             }
             case "graphenev": {
+                System.out.println(args[0]);
                 Scanner scanner = new Scanner(pushReader);
                 Parser parser = new Parser(scanner);
-                AstPrinter astPrinter = new AstPrinter();
-                parser.nStack.peek().accept(astPrinter);
                 SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
-                parser.nStack.pop().accept(semanticAnalyzer);
+                parser.nStack.peek().accept(semanticAnalyzer);
+                AstPrinter astPrinter = new AstPrinter();
+                parser.nStack.pop().accept(astPrinter);
                 System.out.println(astPrinter);
                 break;
             }
