@@ -1,16 +1,12 @@
 package src;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.stream.Collectors;
 
 public class SemanticAnalyzer implements AstVisitor {
 
     private boolean hasMain;
     private FnNode currentFnNode;
     private IdNode currentIdNode;
-    private StringBuilder builder = new StringBuilder();
-    private void incDepth(int amount) {for (int i=0;i<amount;i++) {builder.append("   ");}}
 
     protected SymbolTable table;
 
@@ -210,32 +206,7 @@ public class SemanticAnalyzer implements AstVisitor {
         currentIdNode = idNode;
     }
 
-    public String toString() {
-        for (FnNode fnNode : table.getMap().keySet()) {
-            builder.append("function "+fnNode.getIdNode().toString().replace("identifier ","")+"\n");
-            incDepth(1);
-            builder.append("function type: "+fnNode.getSemanticType()+"\n"); 
-            incDepth(1);
-            builder.append("parameters:\n");
-            for (String param : table.getMap().get(fnNode).getParamNames()) {
-                incDepth(2); builder.append(param+"\n");
-            }
-            incDepth(1);
-            builder.append("callee(s):\n");
-            for (String call : table.getMap().get(fnNode).getCallNames()) {
-                incDepth(2); builder.append(call+"\n");
-            }
-            incDepth(1);
-            builder.append("caller(s):\n");
-            for (FnNode fn : table.getMap().keySet()) {
-                if (table.getMap().get(fn).getCallNames().contains(fnNode.getIdNode().toString().replace("identifier ",""))) {
-                    incDepth(2); builder.append(fn.getIdNode().toString().replace("identifier ","")+"\n");
-                }
-            }
-            builder.append("\n");
-        }
-        return builder.toString().trim();
-    }
+    public String toString() {return table.toString().trim();}
 }
 
 class SymbolTable implements AstVisitor {
@@ -244,6 +215,8 @@ class SymbolTable implements AstVisitor {
     private FunctionSymbol fnSymbol = new FunctionSymbol();
     private TypeNode currentTypeNode;
     private IdNode currentIdNode;
+    private StringBuilder builder = new StringBuilder();
+    private ArrayList<Node> fnNodes = new ArrayList<>();
 
     public SymbolTable(Node node) throws Analyzer {
         node.accept(this);
@@ -259,6 +232,7 @@ class SymbolTable implements AstVisitor {
 
     @Override
     public void visit(PrgrmNode prgrmNode) throws Analyzer {
+        fnNodes = prgrmNode.getFunctions();
         for (Node node : prgrmNode.getFunctions()) {
             node.accept(this);
         }
@@ -266,22 +240,18 @@ class SymbolTable implements AstVisitor {
 
     @Override
     public void visit(FnNode fnNode) throws Analyzer {
+        fnSymbol = new FunctionSymbol();
+        fnNode.getIdNode().accept(this);
+        fnSymbol.setFnId(currentIdNode);
         for (FnNode key : map.keySet()) {
             if (key.getIdNode().toString().equals(fnNode.getIdNode().toString())) {
                 new Analyzer(Lex.FNNAMECONFLICT,fnNode.getIdNode());
             }
         }
-        fnSymbol = new FunctionSymbol();
-        for (Node paramNode : fnNode.getParamNodes()) {
-            paramNode.accept(this);
-        }
-        for (Node bodyNode : fnNode.getBodyNodes()) {
-            bodyNode.accept(this);
-        }
+        for (Node paramNode : fnNode.getParamNodes()) {paramNode.accept(this);}
+        for (Node bodyNode : fnNode.getBodyNodes()) {bodyNode.accept(this);}
         for (IdNode param : fnSymbol.getParamNodes()) {
-            if (!fnSymbol.getidNames().contains(param.getName())) {
-                new Analyzer(Lex.UNUSEDPARAM,param);
-            }
+            if (!fnSymbol.getidNames().contains(param.getName())) {new Analyzer(Lex.UNUSEDPARAM,param);}
         }
         map.put(fnNode, fnSymbol);
     }
@@ -301,10 +271,8 @@ class SymbolTable implements AstVisitor {
     @Override
     public void visit(CallNode callNode) throws Analyzer {
         callNode.getId().accept(this);
-        fnSymbol.addCallNode(currentIdNode);
-        getCallNames.add(currentIdNode.getName());
-        // Add id node of primitive function call print to function symbol
-        if (currentIdNode.getName().equals("print")) {fnSymbol.addPrintNode(currentIdNode);}
+        if (!fnSymbol.getCalleeNames().contains(currentIdNode.getName())) {fnSymbol.addCalleeNode(currentIdNode);}
+        if (!getCallNames.contains(currentIdNode.getName())) {getCallNames.add(currentIdNode.getName());}
         for (Node arg : callNode.getArgs()) {
             arg.accept(this);
         }
@@ -312,12 +280,8 @@ class SymbolTable implements AstVisitor {
 
     @Override
     public void visit(BinaryNode binNode) throws Analyzer {
-        if (binNode.getLeft()!=null) {
-            binNode.getLeft().accept(this);
-        }
-        if (binNode.getRight()!=null) {
-            binNode.getRight().accept(this);
-        }
+        if (binNode.getLeft()!=null) {binNode.getLeft().accept(this);}
+        if (binNode.getRight()!=null) {binNode.getRight().accept(this);}
     }
 
     @Override
@@ -343,48 +307,81 @@ class SymbolTable implements AstVisitor {
         currentTypeNode = typeNode;
     }
 
+    public String toString() {
+        
+        for (Node key : fnNodes) {
+            builder.append("function: "+map.get(key).getFnIdName()+"\n");
+            builder.append("   return type: "+key.getSemanticType().toString().toLowerCase()+"\n");
+            builder.append("   parameters:\n");
+            for (String param : map.get(key).getParamNames()) {builder.append("      "+param+"\n");}
+            builder.append("   callee(s):\n");
+            for (String callee : map.get(key).getCalleeNames()) {builder.append("      "+callee+"\n");}
+            builder.append("   caller(s):\n");
+            for (FnNode callKey : map.keySet()) {
+                if (map.get(callKey).getCalleeNames().contains(map.get(key).getFnIdName())) {
+                    builder.append("      "+map.get(callKey).getFnIdName()+"\n");
+                }
+            }
+            builder.append("\n");
+        }
+
+        int printCount = 0;
+        for (FnNode key : map.keySet()) {
+            boolean hasPrint = false;
+            if (map.get(key).getCalleeNames().contains("print")) {hasPrint=true; printCount++;}
+            if (hasPrint && printCount==1) {
+                builder.append("function: print\n");
+                builder.append("   return type: string\n");
+                builder.append("   caller(s):\n");
+                builder.append("      "+map.get(key).getFnIdName()+"\n");
+            }
+            else if (printCount>1) {
+                builder.append("      "+map.get(key).getFnIdName()+"\n");
+            }
+        }
+        return builder.toString();
+    }
+
     class FunctionSymbol {
 
         private ArrayList<String> stringArray;
+        private IdNode fnIdNode;
         private ArrayList<IdNode> paramNodes;
         private ArrayList<Lex> idTypes;
-        private ArrayList<IdNode> printNodes;
         private ArrayList<IdNode> idNodes;
-        private ArrayList<IdNode> callNodes;
+        private ArrayList<IdNode> calleeNodes;
 
         public FunctionSymbol() {
             this.paramNodes = new ArrayList<>();
             this.idNodes = new ArrayList<>();
             this.idTypes = new ArrayList<>();
-            this.printNodes = new ArrayList<>();
             this.paramNodes = new ArrayList<>();
-            this.callNodes = new ArrayList<>();
+            this.calleeNodes = new ArrayList<>();
         }
         
+        private void setFnId(IdNode idNode) {this.fnIdNode = idNode;}
         private void addParamNode(IdNode paramNode) {paramNodes.add(paramNode);}
         private void addIdType(Lex type) {idTypes.add(type);}
-        private void addPrintNode(IdNode printNode) {printNodes.add(printNode);}
         private void addIdNode(IdNode idNode) {idNodes.add(idNode);}
-        private void addCallNode(IdNode callNode) {callNodes.add(callNode);}
-        private ArrayList<String> getidNames () {
+        private void addCalleeNode(IdNode calleeNode) {calleeNodes.add(calleeNode);}
+        protected ArrayList<String> getidNames () {
             stringArray = new ArrayList<>();
             for (IdNode id : idNodes) {stringArray.add(id.getName());}
             return stringArray;
         }
-
         protected ArrayList<String> getParamNames() {
             stringArray = new ArrayList<>();
             for (IdNode param : getParamNodes()) {stringArray.add(param.getName());}
             return stringArray;
         }
-        protected ArrayList<String> getCallNames() {
+        protected ArrayList<String> getCalleeNames() {
             stringArray = new ArrayList<>();
-            for (IdNode call : getCallNodes()) {if (!stringArray.contains(call.getName())) {stringArray.add(call.getName());}}
+            for (IdNode callee : getCalleeNodes()) {if (!stringArray.contains(callee.toString())) {stringArray.add(callee.getName());}}
             return stringArray;
         }
+        protected String getFnIdName() {return this.fnIdNode.getName();}
         protected ArrayList<IdNode> getParamNodes() {return paramNodes;}
         protected ArrayList<Lex> getIdTypes() {return idTypes;}
-        protected ArrayList<IdNode> getPrintNodes() {return printNodes;}
-        protected ArrayList<IdNode> getCallNodes() {return callNodes;}
+        protected ArrayList<IdNode> getCalleeNodes() {return calleeNodes;}
     }
 }
