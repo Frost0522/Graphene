@@ -19,6 +19,7 @@ grapheneContent='
 s=false
 f=false
 p=false
+v=false
 allPrograms=false
 file=""
 
@@ -27,6 +28,7 @@ while [[ "$#" -gt 0 ]]; do
         -s) s=true ;;
         -f) f=true ;;
         -p) p=true ;;
+        -v) v=true ;;
         -allPrograms) allPrograms=true ;;
         *) file="$1" ;;
     esac
@@ -42,6 +44,9 @@ elif $f; then
 elif $p; then
     if [ -z "$file" ]; then echo "A positional argument for a Graphene file name must be provided."; exit 1; fi
     java -jar ../bin/src/graphene.jar "$file" "graphenep"
+elif $v; then
+    if [ -z "$file" ]; then echo "A positional argument for a Graphene file name must be provided."; exit 1; fi
+    java -jar ../bin/src/graphene.jar "$file" "graphenev"
 elif $allPrograms; then
     if [ -n "$file" ]; then echo "No positional argument needed."; exit 1; fi
     for file in ../programs/*.gr; do
@@ -74,6 +79,13 @@ if [ -z "$file" ]; then echo "A positional argument for a Graphene file name mus
 java -jar ../bin/src/graphenep.jar "$file" "graphenep"
 '
 
+graphenevContent='
+#!/bin/bash
+file="$1"
+if [ -z "$file" ]; then echo "A positional argument for a Graphene file name must be provided."; exit 1; fi
+java -jar ../bin/src/graphenev.jar "$file" "graphenev"
+'
+
 # Function to make scripts
 function MakeScript() {
     local fileName="$1"
@@ -101,6 +113,7 @@ MakeScript "graphene.sh" "$grapheneContent"
 MakeScript "graphenes.sh" "$graphenesContent"
 MakeScript "graphenef.sh" "$graphenefContent"
 MakeScript "graphenep.sh" "$graphenepContent"
+MakeScript "graphenev.sh" "$graphenevContent"
 
 # Output for fresh build
 if [ "$isGenerated" = true ]; then
@@ -112,6 +125,7 @@ if [ "$reload" = true ]; then
     ReloadScript "graphenes.sh" "$graphenesContent"
     ReloadScript "graphenef.sh" "$graphenefContent"
     ReloadScript "graphenep.sh" "$graphenepContent"
+    ReloadScript "graphenev.sh" "$graphenevContent"
     echo "Reloading scripts."
 else
     # Compile source code

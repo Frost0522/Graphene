@@ -12,6 +12,7 @@ param (
     [switch]$s,
     [switch]$f,
     [switch]$p,
+    [switch]$v,
     [switch]$allPrograms,
     $file
 )
@@ -28,6 +29,10 @@ switch ($true) {
     {$p} {
         if (-not $file) {Write-Host "A positional argument for a Graphene file name must be provided."; exit 1}
         java -jar ../bin/src/graphene.jar $file "graphenep"; break;
+    }
+    {$v} {
+        if (-not $file) {Write-Host "A positional argument for a Graphene file name must be provided."; exit 1}
+        java -jar ../bin/src/graphene.jar $file "graphenev"; break;
     }
     {$allPrograms} {
         if ($file) {Write-Host "No positional argument needed."; exit 1}
@@ -63,6 +68,12 @@ if (-not $file) {Write-Host "A positional argument for a Graphene file name must
 java -jar ../bin/src/graphenep.jar $file "graphenep";
 '@
 
+$graphenevContent = @'
+param([string]$file)
+if (-not $file) {Write-Host "A positional argument for a Graphene file name must be provided."; exit 1}
+java -jar ../bin/src/graphenev.jar $file "graphenev";
+'@
+
 # Function to make scripts
 $isGenerated = $false
 function Make-Script($fileName, $content) {
@@ -87,6 +98,7 @@ Make-Script "graphene.ps1" $grapheneContent
 Make-Script "graphenes.ps1" $graphenesContent
 Make-Script "graphenef.ps1" $graphenefContent
 Make-Script "graphenep.ps1" $graphenepContent
+Make-Script "graphenev.ps1" $graphenevContent
 
 # Output for fresh build
 if ($isGenerated) {Write-Host "All scripts have been generated successfully."}
@@ -96,6 +108,7 @@ if ($reload) {
     Reload-Script "graphenes.ps1" $graphenesContent
     Reload-Script "graphenef.ps1" $graphenefContent
     Reload-Script "graphenep.ps1" $graphenepContent
+    Reload-Script "graphenev.ps1" $graphenevContent
     Write-Host "Reloading scripts."
 }
 else {
