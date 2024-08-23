@@ -22,13 +22,15 @@ In a terminal, navigate to the source directory and run the build command.
     - `graphene -s path_to_file/file_name` : Most recent compilation of only the scanner's output (Prints the tokens and their types).
     - `graphene -f path_to_file/file_name` : Most recent compilation of only the parser's output (Validates Graphene files).
     - `graphene -p path_to_file/file_name` : Most recent compilation of only the parser's output (Prints mockup of Graphene files).
+    - `graphene -v path_to_file/file_name` : Most recent compilation of only the semantic analyzer's output (Prints the Graphene file's symbol table).
     - `graphene -allPrograms` : Runs most recent compilation of source code against all Graphene files in the programs directory.
 
 Scripts for compiled Graphene source code the day of finishing a various stage of the compiler. *Unstable*.
 
 - `graphenes path_to_file/file_name` : Prints the tokens and their types 
-- `graphenef path_to_file/file_name` : Validates Graphene files
+- `graphenef path_to_file/file_name` : Validates Graphene file syntax
 - `graphenep path_to_file/file_name` : Prints mockup of Graphene files
+- `graphenev path_to_file/file_name` : Prints the Graphene file's symbol table
 
 ## To-Do
 
@@ -44,7 +46,7 @@ Scripts for compiled Graphene source code the day of finishing a various stage o
 
 > `Updating the analyzer` : With all of the changes to the parser, nodes, and node printer, I need to make sure the Analyzer is maintained and still well enough to handle all parsing errors.
 
-`Semantic Analysis` : Now with sytax out of the way I can finally begin working on the semantics.
+> `Semantic Analysis` : Now with sytax out of the way I can finally begin working on the semantics.
 
 
 ## Bug Fixes / Updates
