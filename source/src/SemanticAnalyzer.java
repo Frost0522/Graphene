@@ -273,9 +273,7 @@ class SymbolTable implements AstVisitor {
         callNode.getId().accept(this);
         if (!fnSymbol.getCalleeNames().contains(currentIdNode.getName())) {fnSymbol.addCalleeNode(currentIdNode);}
         if (!getCallNames.contains(currentIdNode.getName())) {getCallNames.add(currentIdNode.getName());}
-        for (Node arg : callNode.getArgs()) {
-            arg.accept(this);
-        }
+        for (Node arg : callNode.getArgs()) {arg.accept(this);}
     }
 
     @Override

@@ -345,9 +345,7 @@ class BinaryNode extends Node {
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
     protected String getErrorStr() {return "";}
-    protected void accept(AstVisitor visitor) throws Analyzer {
-        visitor.visit(this);
-    }
+    protected void accept(AstVisitor visitor) throws Analyzer {visitor.visit(this);}
 }
 
 class EqNode extends BinaryNode {public EqNode(Stack<Node> stack) {super(stack, "==", Lex.EQUIVALENT);}}

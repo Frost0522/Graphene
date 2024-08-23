@@ -46,11 +46,13 @@ public class Main {
                 System.out.println(args[0]);
                 Scanner scanner = new Scanner(pushReader);
                 Parser parser = new Parser(scanner);
-                // SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
-                // parser.nStack.peek().accept(semanticAnalyzer);
-                AstPrinter astPrinter = new AstPrinter();
-                parser.nStack.pop().accept(astPrinter);
-                System.out.println(astPrinter);
+                SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
+                parser.nStack.peek().accept(semanticAnalyzer);
+                System.out.println(semanticAnalyzer);
+                break;
+            }
+            case "graphenec": {
+                System.out.println(args[0]);
                 break;
             }
             default: {
