@@ -46,7 +46,7 @@ public class SemanticAnalyzer implements AstVisitor {
         for (Node bodyNode : fnNode.getBodyNodes()) {
             bodyNode.accept(this);
             // Exception for primitive function calls to print, continue until non-print node.
-            if (bodyNode.getSemanticType().equals(Lex.PRINTEXP)) {continue;}
+            if (bodyNode.getSemanticType()==Lex.PRINTEXP) {continue;}
             // Check that the function return type matches that of the body node
             if (currentFnNode.getReturnType().getSemanticType()!=bodyNode.getSemanticType()) {
                 new Analyzer(Lex.RETURNTYPEERROR,bodyNode);
@@ -99,6 +99,15 @@ public class SemanticAnalyzer implements AstVisitor {
     }
 
     @Override
+    public void visit(NotNode notNode) throws Analyzer {
+        notNode.getNode().accept(this);
+        if (notNode.getNode().getSemanticType()!=Lex.BOOLEAN) {
+            new Analyzer(Lex.NOTOPERROR,notNode);
+        }
+        else {notNode.setSemanticType(notNode.getNode().getSemanticType());}
+    }
+
+    @Override
     public void visit(CallNode callNode) throws Analyzer {
         boolean isPrint = callNode.getId().toString().equals("identifier print");
         // First check to see of the funciton call is a primitive print.
@@ -144,6 +153,10 @@ public class SemanticAnalyzer implements AstVisitor {
                 }
             }
         }
+        // Make sure that the sign (negative or positive) and type of the node make sense.
+        if (callNode.getSemanticType()==Lex.BOOLEAN && callNode.getSign()==Lex.MINUS) {
+            new Analyzer(Lex.SIGNANDTYPEMISSMATCH,callNode);
+        }
     }
 
     @Override
@@ -183,6 +196,10 @@ public class SemanticAnalyzer implements AstVisitor {
     public void visit(ExpNode expNode) throws Analyzer {
         expNode.getNode().accept(this);
         expNode.setSemanticType(expNode.getNode().getSemanticType());
+        // Make sure that the sign (negative or positive) and type of the node make sense.
+        if (expNode.getSemanticType()==Lex.BOOLEAN && expNode.getSign()==Lex.MINUS) {
+            new Analyzer(Lex.SIGNANDTYPEMISSMATCH,expNode);
+        }
     }
 
     @Override
@@ -195,7 +212,7 @@ public class SemanticAnalyzer implements AstVisitor {
     }
 
     @Override
-    public void visit(IdNode idNode) {
+    public void visit(IdNode idNode) throws Analyzer {
         // If the id node matches a parameter in the parameter list, set it's type
         if (idNode.getSemanticType()==null) {
             int idIndex = table.getMap().get(currentFnNode).getParamNames().indexOf(idNode.getName());
@@ -204,6 +221,18 @@ public class SemanticAnalyzer implements AstVisitor {
             }
         }
         currentIdNode = idNode;
+        // Make sure that the sign (negative or positive) and type of the node make sense.
+        if (idNode.getSemanticType()==Lex.BOOLEAN && idNode.getSign()==Lex.MINUS) {
+            new Analyzer(Lex.SIGNANDTYPEMISSMATCH,idNode);
+        }
+    }
+
+    @Override
+    public void visit(LitNode litNode) throws Analyzer {
+        // Make sure that the sign (negative or positive) and type of the node make sense.
+        if (litNode.getSemanticType()==Lex.BOOLEAN && litNode.getSign()==Lex.MINUS) {
+            new Analyzer(Lex.SIGNANDTYPEMISSMATCH,litNode);
+        }
     }
 
     public String toString() {return table.toString().trim();}
@@ -280,6 +309,11 @@ class SymbolTable implements AstVisitor {
     public void visit(BinaryNode binNode) throws Analyzer {
         if (binNode.getLeft()!=null) {binNode.getLeft().accept(this);}
         if (binNode.getRight()!=null) {binNode.getRight().accept(this);}
+    }
+
+    @Override
+    public void visit(NotNode notNode) throws Analyzer {
+        notNode.getNode().accept(this);
     }
 
     @Override

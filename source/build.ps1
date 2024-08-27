@@ -110,7 +110,7 @@ if ($reload) {
     Reload-Script "graphenep.ps1" $graphenepContent
     Reload-Script "graphenev.ps1" $graphenevContent
     Write-Host "Reloading scripts."
-}
+} 
 else {
     # Compile source code
     javac -d ./out ./src/*.java

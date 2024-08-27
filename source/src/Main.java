@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.PushbackReader;
 
 public class Main {
+
     private String scriptType;
 
     public Main(String s) {

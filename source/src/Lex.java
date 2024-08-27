@@ -17,13 +17,13 @@ public enum Lex {
 
     // Semantic actions
     MKID, MKTYPE, MKPARAM, MKARGS, MKFN, MKFNCALL, MKIF, MKLIT, MKEQ, MKMINUS,
-    MKDIVIDE, MKTIMES, MKAND, MKOR, MKLESSTHAN, MKRETURNTYPE, MKPROGRAM, MKPRINT,
+    MKDIVIDE, MKTIMES, MKAND, MKOR, MKNOT, MKLESSTHAN, MKRETURNTYPE, MKPROGRAM, MKPRINT,
     MKNEG, MKPLUS, MKEXP,
 
     //Error types for symantic analyzer
     PRIMITIVEFN, PRIMITIVEPARAM, NOMAIN, INTOPERROR, BOOLOPERROR, NOID, RETURNTYPEERROR,
     DIFFOPERANDS, NOFNCALL, TOOFEWARGS, TOOMANYARGS, BADARGTYPE, IFOPERROR, DIFFCLAUSES,
-    FNNAMECONFLICT, PARAMNAMECONFLICT, UNUSEDFN, UNUSEDPARAM;
+    FNNAMECONFLICT, PARAMNAMECONFLICT, UNUSEDFN, UNUSEDPARAM, NOTOPERROR, SIGNANDTYPEMISSMATCH;
 
     public int value() {
         switch (this) {
@@ -98,11 +98,13 @@ public enum Lex {
     public static int[] getPrint() {return new int[]{112,114,105,110,116};}
     public static int[] getIf() {return new int[]{105,102};}
 
-// Used for checking if a parse stack value, of type lexical, adheres to a particular set of rules.
+// Used for checking if a parse stack value, of type lex, adheres to a particular set of rules.
     public static Lex[] isTerminal() {
         return new Lex[]{FN,LEFTPAREN,RIGHTPAREN,RETURN,COMMA,COLON,INTEGER,BOOLEAN,EQUIVALENT,LESSTHAN,
                        OR,PLUS,MINUS,AND,TIMES,DIVIDE,NOT,IF,ELSE,ID,BOOLEANLITERAL,INTEGERLITERAL};
     }
+
+    public static Lex[] canBeNegative() {return new Lex[]{INTEGERLITERAL,BOOLEANLITERAL,ID,FNCALL,EXP,LEFTPAREN};}
 
     public static Lex[] isOperator() {return new Lex[]{PLUS,MINUS,TIMES,DIVIDE,AND,OR,EQUIVALENT,LESSTHAN};}
 

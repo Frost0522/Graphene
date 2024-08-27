@@ -192,7 +192,7 @@ public class Analyzer extends Exception {
                 if (errorToken.getType().equals(Lex.MINUS) && deadLst.get(deadLst.size() - 1).getType().equals(Lex.MINUS)) {
                     throw new Analyzer("Line "+errorToken.line+" Column "+errorToken.column+"\nParsing Error: Last token '"+lastTokenName+
                                        "' encountered illegal next token '"+errorName+"'.");
-                }
+                } break;
         }
         if (errorToken.getType().equals(Lex.$)) {
             throw new Analyzer("Line "+errorToken.line+" Column "+errorToken.column+"\nParsing Error: Stack rule "+"'"+topOfStack+"'"+
@@ -208,21 +208,21 @@ public class Analyzer extends Exception {
         int line = node.position()[0]; int column = node.position()[1];
         switch (errorType) {
             case PRIMITIVEFN: {
-                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Functions cannot have "+
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Functions must not have "+
                                    "primitive name 'print'.");
             }
             case PRIMITIVEPARAM: {
-                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Parameters cannot have "+
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Parameters must not have "+
                                    "primitive name 'print'.");
             }
             case NOMAIN: {
                 throw new Analyzer("Semantic Error: No main function was declared.");
             }
             case INTOPERROR: {
-                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Boolean cannot be used in an integer operation.");
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Booleans must not be used in an integer operations.");
             }
             case BOOLOPERROR: {
-                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Integer cannot be used in a boolean operation.");
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Integers must not be used in a boolean operations.");
             }
             case NOID: {
                 throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Unassigned "+node.getErrorStr()+", check that the"+
@@ -264,6 +264,23 @@ public class Analyzer extends Exception {
             case PARAMNAMECONFLICT: {
                 throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Parameter '"+node.toString().replace("identifier ","")+
                                    "' has already been declared in this function.");
+            }
+            case NOTOPERROR: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Not operations must be of type boolean.");
+            }
+            case SIGNANDTYPEMISSMATCH: {
+                if (node.nodeType()==Lex.FNCALL) {
+                    throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Function calls of type boolean must not be negative.");
+                }
+                if (node.nodeType()==Lex.EXP) {
+                    throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Expressions of type boolean must not be negative.");
+                }
+                if (node.nodeType()==Lex.ID) {
+                    throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Identifiers of type boolean must not be negative.");
+                }
+                if (node.nodeType()==Lex.LITERAL) {
+                    throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Boolean literals must not be negative.");
+                }
             }
         }
 
