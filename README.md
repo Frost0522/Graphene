@@ -66,3 +66,5 @@ Scripts for compiled Graphene source code the day of finishing a various stage o
 - `current scanner output` : I accidentally forgot to make sure that the current scanners output functioned the same as it previously had. Running 'graphenes' (previous) and 'graphene -s' (current) now yield the same output.
 
 - `improper warnings` : A warning was being given for the main function not being used in a program. Of the functions that should be warned, main is not one of them, since it is the entry point of the program and must exist unless no other functions are given.
+
+- `missing features` : I had a bit of an oversight, while reworking the AST nodes, semantic actions of the parser, and the AST printer; I forgot to add back in a way to negate boolean values with the not operation and make sure that the AST printer tells you which values are negative. All of this has been added back in.
