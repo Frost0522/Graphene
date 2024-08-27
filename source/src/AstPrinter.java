@@ -73,13 +73,24 @@ public class AstPrinter implements AstVisitor {
     }
 
     @Override
+    public void visit(NotNode notNode) throws Analyzer {
+        if (depth < 2) {depth+=2;}
+        astStr.append(formatStr("operator "+notNode.getSymbol()+"\n"));
+        depth++;
+        notNode.getNode().accept(this);
+        depth--;    
+    }
+
+    @Override
     public void visit(CallNode callNode) throws Analyzer {
         if (depth < 2) {
             depth+=2;
-            astStr.append(formatStr(callNode.toString()));
+            if (callNode.getSign()==Lex.MINUS) {astStr.append(formatStr("(neg) "+callNode.toString()));}
+            else {astStr.append(formatStr(callNode.toString()));}
         }
         else {
-            astStr.append(formatStr("function call"+"\n"));
+            if (callNode.getSign()==Lex.MINUS) {astStr.append(formatStr("(neg) function call"+"\n"));}
+            else {astStr.append(formatStr("function call"+"\n"));}
             depth++;
             astStr.append(formatStr(callNode.getId().toString()));
             if (callNode.getArgs().isEmpty()) {astStr.append(formatStr("args",false));}
@@ -99,11 +110,8 @@ public class AstPrinter implements AstVisitor {
 
     @Override
     public void visit(IfNode ifNode) throws Analyzer {
-        if (depth < 2) {
-            depth+=2;
-            astStr.append(formatStr("if"));
-        }
-        else {astStr.append(formatStr("if"));}
+        if (depth < 2) {depth+=2;}
+        astStr.append(formatStr("if"));
         depth++; ifNode.getIf().accept(this); depth--;
         astStr.append(formatStr("\nthen"));
         depth++; ifNode.getThen().accept(this); depth--;
@@ -129,7 +137,9 @@ public class AstPrinter implements AstVisitor {
 
     @Override
     public void visit(ExpNode expNode) throws Analyzer {
-        astStr.append(formatStr("expression\n"));
+        if (depth < 2) {depth+=2;}
+        if (expNode.getSign()==Lex.MINUS) {astStr.append(formatStr("(neg) expression\n"));}
+        else {astStr.append(formatStr("expression\n"));}
         depth++; expNode.getNode().accept(this); depth--;
     }
 }

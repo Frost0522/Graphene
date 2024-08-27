@@ -179,7 +179,7 @@ public class Parser {
                     pStack.pop(); for (Lex rule : Lex.minusFactorRules()) {pStack.push(rule);} break;
                 }
                 if (nextType == Lex.NOT) {
-                    pStack.push(Lex.NOT); break;
+                    pStack.pop(); pStack.push(Lex.MKNOT); pStack.push(Lex.FACTOR); pStack.push(Lex.NOT); break;
                 }
                 if (nextType == Lex.IF) {
                     pStack.pop(); for (Lex rule : Lex.ifRules()) {pStack.push(rule);} break;
@@ -223,7 +223,7 @@ public class Parser {
         }
     }
 
-    public void semanticAction() {
+    public void semanticAction() throws Analyzer {
         Lex semanticRule = pStack.peek();
         if (lastToken==null) {semanticRule=Lex.$;}
         switch (semanticRule) {
@@ -239,6 +239,7 @@ public class Parser {
             case MKTIMES: {pStack.pop(); nStack.push(new TimesNode(nStack)); break;}
             case MKAND: {pStack.pop(); nStack.push(new AndNode(nStack)); break;}
             case MKOR: {pStack.pop(); nStack.push(new OrNode(nStack)); break;}
+            case MKNOT: {pStack.pop(); nStack.push(new NotNode(nStack)); break;}
             case MKLESSTHAN: {pStack.pop(); nStack.push(new LessNode(nStack)); break;}
             case MKPROGRAM: {pStack.pop(); nStack.push(new PrgrmNode(nStack)); break;}
             case MKFN: {pStack.pop(); nStack.push(new FnNode(nStack)); break;}
@@ -246,7 +247,7 @@ public class Parser {
             case MKARGS: {pStack.pop(); nStack.push(new NullNode()); break;}
             case MKIF: {pStack.pop(); nStack.push(new IfNode(nStack)); break;}
             case MKEXP: {pStack.pop(); nStack.push(new ExpNode(nStack)); break;}
-            case MKNEG: {pStack.pop(); break;}
+            case MKNEG: {pStack.pop(); nStack.peek().flipSign(); break;}
             default: {break;}
         }
     }
@@ -257,7 +258,7 @@ public class Parser {
             if (!pStack.peek().equals(tokenLst.get(0).getType())) {new Analyzer(tokenLst, deadLst, pStack);}
             lastToken = tokenLst.get(0);
             nextToken = getNextToken();
-            if (lastToken.getType()==Lex.MINUS && nextToken.getType()==Lex.MINUS) {new Analyzer(tokenLst, deadLst, pStack);}
+            if (lastToken.getType()==Lex.MINUS && (!listContains(nextToken.getType(),Lex.canBeNegative()))) {new Analyzer(tokenLst, deadLst, pStack);}
             pStack.pop();
         }
         return nextToken;

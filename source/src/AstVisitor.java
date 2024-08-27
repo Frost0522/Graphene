@@ -3,10 +3,10 @@ import java.util.ArrayList;
 import java.util.Stack;
 
 public interface AstVisitor {
-    default public void visit(IdNode node) {}
+    default public void visit(IdNode node) throws Analyzer {}
     default public void visit(TypeNode node) {}
     default public void visit(ReturnNode node) {}
-    default public void visit(LitNode node) {}
+    default public void visit(LitNode node) throws Analyzer {}
     default public void visit(ParamNode node) throws Analyzer {}
     default public void visit(BinaryNode node) throws Analyzer {}
     default public void visit(EqNode node) {}
@@ -16,6 +16,7 @@ public interface AstVisitor {
     default public void visit(TimesNode node) {}
     default public void visit(AndNode node) {}
     default public void visit(OrNode node) {}
+    default public void visit(NotNode node) throws Analyzer {}
     default public void visit(LessNode node) {}
     default public void visit(FnNode node) throws Analyzer {}
     default public void visit(CallNode node) throws Analyzer {}
@@ -26,6 +27,8 @@ public interface AstVisitor {
 }
 
 abstract class Node {
+    abstract Lex getSign();
+    abstract void flipSign();
     abstract void accept(AstVisitor visitor) throws Analyzer;
     abstract Lex nodeType();
     abstract int[] position();
@@ -38,6 +41,8 @@ class NullNode extends Node {
 
     public NullNode() {}
 
+    protected Lex getSign() {return null;}
+    protected void flipSign() {}
     protected int[] position() {return new int[]{};}
     protected void accept(AstVisitor visitor) {visitor.visit(this);}
     protected Lex nodeType() {return Lex.$;}
@@ -50,6 +55,7 @@ class IdNode extends Node {
 
     private Token id;
     private Lex semanticType;
+    private Lex sign = Lex.PLUS;
 
     public IdNode(Token t) {
         this.id = t;
@@ -57,28 +63,20 @@ class IdNode extends Node {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         for (int _int : getCharList()) {builder.append((char) _int);}
-        if (id.getSymbol().equals(Lex.MINUS)) {
-            return "(neg) identifier "+builder;
-        }
-        return "identifier "+builder;
+        return (sign==Lex.MINUS) ? "(neg) identifier "+builder : "identifier "+builder;
     }
 
+    protected Lex getSign() {return sign;}
+    protected void flipSign() {sign = (sign==Lex.PLUS) ? Lex.MINUS : Lex.PLUS;}
     protected int[] position() {return new int[]{id.line,id.column};}
     protected ArrayList<Integer> getCharList() {return id.getCharList();}
-    protected void flipSymbol() {id.flipSymbol();}
-    protected Boolean isNegative() {
-        if (id.getSymbol().equals(Lex.MINUS)) {
-            return true;
-        } 
-        return false;
-    }
     protected String getName() {
         StringBuilder builder = new StringBuilder();
         for (int _int : getCharList()) {builder.append((char) _int);}
         return builder.toString();
     }
     protected String getErrorStr() {return this.toString();}
-    protected void accept(AstVisitor visitor) {visitor.visit(this);}
+    protected void accept(AstVisitor visitor) throws Analyzer {visitor.visit(this);}
     protected Lex nodeType() {return Lex.ID;}
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
@@ -94,6 +92,8 @@ class TypeNode extends Node {
     }
     public String toString() {return type.getType().toString().toLowerCase();}
 
+    protected Lex getSign() {return null;}
+    protected void flipSign() {}
     protected int[] position() {return new int[]{type.line,type.column};}
     protected Lex getType() {return type.getType();}
     protected void accept(AstVisitor visitor) {visitor.visit(this);}
@@ -126,6 +126,7 @@ class LitNode extends Node {
 
     private Token literal;
     private Lex semanticType;
+    private Lex sign = Lex.PLUS;
     
     public LitNode(Token t) {
         this.literal = t;
@@ -137,22 +138,16 @@ class LitNode extends Node {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         for (int _int : getCharList()) {builder.append((char) _int);}
-        if (getType().equals(Lex.INTEGERLITERAL)) {
-            if (literal.getSymbol().equals(Lex.MINUS)) {
-                return "(neg) integer literal "+builder;
-            }
-            return "integer literal "+builder;
-        }
-        return "boolean literal "+builder;
+        return (sign==Lex.MINUS) ? "(neg) integer literal "+builder : (getType()==Lex.INTEGERLITERAL) ? 
+                                   "integer literal "+builder : "boolean literal "+builder;
     }
 
+    protected Lex getSign() {return sign;}
+    protected void flipSign() {sign = (sign==Lex.PLUS) ? Lex.MINUS : Lex.PLUS;}
     protected int[] position() {return new int[]{literal.line,literal.column};}
     protected ArrayList<Integer> getCharList() {return literal.getCharList();}
     protected Lex getType() {return literal.getType();}
-    protected void flipSymbol() {literal.flipSymbol();}
-    protected void accept(AstVisitor visitor) {
-        visitor.visit(this);
-    }
+    protected void accept(AstVisitor visitor) throws Analyzer {visitor.visit(this);}
     protected Lex nodeType() {return Lex.LITERAL;}
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
@@ -173,6 +168,8 @@ class ParamNode extends Node {
         return new String(id+" "+symbol+" "+type.toString());
     }
 
+    protected Lex getSign() {return null;}
+    protected void flipSign() {}
     protected int[] position() {return id.position();}
     protected Node getLeft() {return id;}
     protected Node getRight() {return type;}
@@ -202,6 +199,8 @@ class FnNode extends Node {
                "\n   "+returnType+"\n   body\n";
     }
 
+    protected Lex getSign() {return null;}
+    protected void flipSign() {}
     protected Node getIdNode() {return id;}
     protected Node getReturnType() {return returnType;}
     protected ArrayList<Node> getParamNodes() {return parameters;}
@@ -215,9 +214,7 @@ class FnNode extends Node {
         return builder.toString();
     }
     protected int[] position() {return id.position();}
-    protected void accept(AstVisitor visitor) throws Analyzer {
-        visitor.visit(this);
-    }
+    protected void accept(AstVisitor visitor) throws Analyzer {visitor.visit(this);}
     protected Lex nodeType() {return Lex.FN;}
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
@@ -229,6 +226,7 @@ class CallNode extends Node {
     private Node id;
     private ArrayList<Node> args = new ArrayList<>();
     private Lex semanticType;
+    private Lex sign = Lex.PLUS;
 
     public CallNode(Stack<Node> stack) {
         Node node = stack.pop();
@@ -237,12 +235,12 @@ class CallNode extends Node {
     }
     public String toString() {return "function call"+"\n   "+id+"\n   "+"args";}
 
+    protected Lex getSign() {return sign;}
+    protected void flipSign() {sign = (sign==Lex.PLUS) ? Lex.MINUS : Lex.PLUS;}
     protected Node getId() {return id;}
     protected ArrayList<Node> getArgs() {return args;}
     protected int[] position() {return id.position();}
-    protected void accept(AstVisitor visitor) throws Analyzer {
-        visitor.visit(this);
-    }
+    protected void accept(AstVisitor visitor) throws Analyzer {visitor.visit(this);}
     protected Lex nodeType() {return Lex.FNCALL;}
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
@@ -263,13 +261,13 @@ class IfNode extends Node {
     }
     public String toString() {return "if\n   "+_if+"\nthen\n   "+_then+"\nelse\n   "+_else;}
 
+    protected Lex getSign() {return null;}
+    protected void flipSign() {}
     protected Node getIf() {return _if;}
     protected Node getThen() {return _then;}
     protected Node getElse() {return _else;}
     protected int[] position() {return _if.position();}
-    protected void accept(AstVisitor visitor) throws Analyzer {
-        visitor.visit(this);
-    }
+    protected void accept(AstVisitor visitor) throws Analyzer {visitor.visit(this);}
     protected Lex nodeType() {return Lex.IF;}
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
@@ -290,11 +288,11 @@ class PrgrmNode extends Node {
         return builder.toString();
     }
 
+    protected Lex getSign() {return null;}
+    protected void flipSign() {}
     protected ArrayList<Node> getFunctions() {return functionList;}
     protected int[] position() {return new int[]{0,0};}
-    protected void accept(AstVisitor visitor) throws Analyzer {
-        visitor.visit(this);
-    }
+    protected void accept(AstVisitor visitor) throws Analyzer {visitor.visit(this);}
     protected Lex nodeType() {return Lex.PROGRAM;}
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
@@ -305,21 +303,49 @@ class ExpNode extends Node {
 
     private Node exp;
     private Lex semanticType;
+    private Lex sign = Lex.PLUS;
 
     public Lex type;
     public ExpNode(Stack<Node> stack) {
         exp = stack.pop();
     }
-    public String toString() {return exp.toString();}
-
-    protected Node getNode() {return exp;}
-    protected int[] position() {return new int[]{};}
-    protected void accept(AstVisitor visitor) throws Analyzer {
-        visitor.visit(this);
+    public String toString() {
+        if (sign==Lex.MINUS) {return "(neg) "+exp.toString();}
+        return exp.toString();
     }
+
+    protected Lex getSign() {return sign;}
+    protected void flipSign() {sign = (sign==Lex.PLUS) ? Lex.MINUS : Lex.PLUS;}
+    protected Node getNode() {return exp;}
+    protected int[] position() {return exp.position();}
+    protected void accept(AstVisitor visitor) throws Analyzer {visitor.visit(this);}
     protected Lex nodeType() {return Lex.EXP;}
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
+    protected String getErrorStr() {return "";}
+}
+
+class NotNode extends Node {
+
+    private Node notNode;
+    private Lex semanticType;
+    private String operator = "not";
+    
+    public NotNode(Stack<Node> stack) {
+        notNode = stack.pop();
+    }
+    public String toString() {return "\n"+notNode.toString();}
+
+    protected Lex getSign() {return null;}
+    protected void flipSign() {}
+    protected Node getNode() {return notNode;}
+    protected Lex nodeType() {return Lex.NOT;}
+    protected String getSymbol() {return operator;}
+    protected void accept(AstVisitor visitor) throws Analyzer {visitor.visit(this);}
+    protected void setSemanticType(Lex type) {semanticType = type;}
+    protected Lex getSemanticType() {return semanticType;}
+    protected int[] setPosition() {return new int[]{};}
+    protected int[] position() {return notNode.position();}
     protected String getErrorStr() {return "";}
 }
 
@@ -337,6 +363,8 @@ class BinaryNode extends Node {
     }
     public String toString() {return "operator "+operator+"\n"+"left "+leftNode+"\n"+"right "+rightNode+"\n";}
 
+    protected Lex getSign() {return null;}
+    protected void flipSign() {}
     protected String getSymbol() {return operator;}
     protected int[] position() {return leftNode.position();}
     protected Node getLeft() {return leftNode;}
