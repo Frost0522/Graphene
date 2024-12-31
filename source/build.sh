@@ -54,7 +54,7 @@ elif $allPrograms; then
     done
 else
     if [ -z "$file" ]; then echo "A positional argument for a Graphene file name must be provided."; exit 1; fi
-    java -jar ../bin/src/graphene.jar "$file" "graphenev"
+    java -jar ../bin/src/graphene.jar "$file" "graphenec"
 fi
 '
 

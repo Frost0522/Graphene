@@ -23,8 +23,12 @@ public enum Lex {
     //Error types for symantic analyzer
     PRIMITIVEFN, PRIMITIVEPARAM, NOMAIN, INTOPERROR, BOOLOPERROR, NOID, RETURNTYPEERROR,
     DIFFOPERANDS, NOFNCALL, TOOFEWARGS, TOOMANYARGS, BADARGTYPE, IFOPERROR, DIFFCLAUSES,
-    FNNAMECONFLICT, PARAMNAMECONFLICT, UNUSEDFN, UNUSEDPARAM, NOTOPERROR, SIGNANDTYPEMISSMATCH;
+    FNNAMECONFLICT, PARAMNAMECONFLICT, UNUSEDFN, UNUSEDPARAM, NOTOPERROR, SIGNANDTYPEMISSMATCH,
 
+    // Opcodes for code generation
+    LDC, ST, LDA, LD, OUT, HALT;
+
+    @SuppressWarnings("incomplete-switch")
     public int value() {
         switch (this) {
             case LEFTPAREN: {return 40;}
@@ -59,14 +63,10 @@ public enum Lex {
         }   return $;
     }
 
-    public static boolean compareList(int[] intLst, ArrayList<Integer>intArray) {        
-        if (intLst.length==intArray.size()) {
-            for (int i : intLst) {
-                if (!intArray.contains(i)) {
-                    return false;
-                }
-            } return true;
-        } else return false;
+    public static boolean compareList(int[] intLst, ArrayList<Integer>intArray) {
+        for (int i = intLst.length; 0<i; i++) {
+            if (intLst[i]!=intArray.get(i)) {return false;}
+        } return true;
     }
 
 // Used in state 1 to create various tokens of the language.

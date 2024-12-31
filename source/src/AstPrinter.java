@@ -50,7 +50,6 @@ public class AstPrinter implements AstVisitor {
 
     @Override
     public void visit(BinaryNode binNode) throws Analyzer {
-
         if (depth < 2) {
             depth+=2;
             astStr.append(formatStr("operator "+binNode.getSymbol()));

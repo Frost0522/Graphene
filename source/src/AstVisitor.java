@@ -127,13 +127,14 @@ class LitNode extends Node {
     private Token literal;
     private Lex semanticType;
     private Lex sign = Lex.PLUS;
+    private int value;
     
     public LitNode(Token t) {
         this.literal = t;
         if (this.literal.getType()==Lex.INTEGERLITERAL) {
+            this.value = Integer.valueOf(t.getName());
             this.semanticType = Lex.INTEGER;
-        }
-        else {this.semanticType = Lex.BOOLEAN;}
+        } else {this.semanticType = Lex.BOOLEAN;}
     }
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -142,6 +143,7 @@ class LitNode extends Node {
                                    "integer literal "+builder : "boolean literal "+builder;
     }
 
+    protected int getValue() {return value;}
     protected Lex getSign() {return sign;}
     protected void flipSign() {sign = (sign==Lex.PLUS) ? Lex.MINUS : Lex.PLUS;}
     protected int[] position() {return new int[]{literal.line,literal.column};}
@@ -194,6 +196,7 @@ class FnNode extends Node {
         while (stack.peek().nodeType()==Lex.PARAMLIST) {parameters.add(0, stack.pop());}
         id = stack.pop();
     }
+
     public String toString() {
         return "funcion\n   "+id+"\n   parameters "+getParameters()+
                "\n   "+returnType+"\n   body\n";
@@ -278,6 +281,7 @@ class PrgrmNode extends Node {
 
     private ArrayList<Node> functionList = new ArrayList<>();
     private Lex semanticType;
+    private SymbolTable symbolTable;
 
     public PrgrmNode(Stack<Node> stack) {
         while (!stack.empty()) {functionList.add(0,stack.pop());}
@@ -296,6 +300,8 @@ class PrgrmNode extends Node {
     protected Lex nodeType() {return Lex.PROGRAM;}
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
+    protected void setSymbolTable(SymbolTable symbolTable) {this.symbolTable = symbolTable;}
+    protected SymbolTable getSymbolTable() {return this.symbolTable;}
     protected String getErrorStr() {return "";}
 }
 

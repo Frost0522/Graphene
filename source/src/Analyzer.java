@@ -2,10 +2,10 @@ package src;
 import java.util.ArrayList;
 import java.util.Stack;
 
-public class Analyzer extends Exception {
+public class Analyzer extends Throwable {
 
     public Analyzer(String msg) {
-        super(msg);
+        System.err.println(msg); System.exit(0);
     }
 
     private void _defaultMsg(int line, int column, String topOfStack, Token errorToken, StringBuilder errorName) throws Analyzer {
@@ -24,6 +24,7 @@ public class Analyzer extends Exception {
     }
     
     // Error handling for parsing rules.
+    @SuppressWarnings("incomplete-switch")
     public Analyzer(ArrayList<Token> tokenList, ArrayList<Token> deadLst, Stack<Lex> stack) throws Analyzer {
 
         String topOfStack = stack.peek().toString().toLowerCase();
@@ -204,6 +205,7 @@ public class Analyzer extends Exception {
     }
 
     // Error handling for the semantic analyzer.
+    @SuppressWarnings("incomplete-switch")
     public Analyzer(Lex errorType, Node node) throws Analyzer {
         int line = node.position()[0]; int column = node.position()[1];
         switch (errorType) {
@@ -286,10 +288,10 @@ public class Analyzer extends Exception {
 
         // Warning messages
         if (errorType==Lex.UNUSEDFN) {
-            System.out.println("Warning @"+line+":"+column+" -> Function '"+node.toString().replace("identifier ","")+"' is never used.");
+            System.err.println("Warning @"+line+":"+column+" -> Function '"+node.toString().replace("identifier ","")+"' is never used.");
         }
         else if (errorType==Lex.UNUSEDPARAM) {
-            System.out.println("Warning @"+line+":"+column+" -> Parameter '"+node.toString().replace("identifier ","")+"' is never used.");
+            System.err.println("Warning @"+line+":"+column+" -> Parameter '"+node.toString().replace("identifier ","")+"' is never used.");
         }
         else {throw new Analyzer("Unexpected Semantic Error.");}
     }

@@ -38,14 +38,14 @@ switch ($true) {
         if ($file) {Write-Host "No positional argument needed."; exit 1}
         $files = Get-ChildItem -Path "../programs/*.gr";
         $files | ForEach-Object {
-            java -jar ../bin/src/graphene.jar ("../programs/" + $_.BaseName) "graphenev";
+            java -jar ../bin/src/graphene.jar ("../programs/" + $_.BaseName) "graphenec";
             if ($_ -ne $files[-1]) {Write-Host ""}
         }
         break;
     }
     default {
         if (-not $file) {Write-Host "A positional argument for a Graphene file name must be provided."; exit 1}
-        java -jar ../bin/src/graphene.jar $file "graphenev"; break;
+        java -jar ../bin/src/graphene.jar $file "graphenec"; break;
     }
 }
 '@

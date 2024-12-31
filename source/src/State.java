@@ -96,6 +96,7 @@ class State_0 extends State {
     }
 }
 
+@SuppressWarnings("incomplete-switch")
 class State_1 extends State {
 
     Token process(ArrayList<State> stateLst, ArrayList<Integer> charLst, Integer currentChar) throws Analyzer, IOException {

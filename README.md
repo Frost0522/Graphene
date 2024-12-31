@@ -48,7 +48,7 @@ Scripts for compiled Graphene source code the day of finishing a various stage o
 
 > `Semantic Analysis` : Now with sytax out of the way I can finally begin working on the semantics.
 
-> `Code Generation` : With the semantics in good condition I can now begin to look at how the AST will be translated for the virtual machine to understand.
+`Code Generation` : With the semantics in good condition I can now begin to look at how the AST will be translated for the virtual machine to understand.
 
 
 ## Bug Fixes / Updates
