@@ -45,7 +45,14 @@ switch ($true) {
     }
     default {
         if (-not $file) {Write-Host "A positional argument for a Graphene file name must be provided."; exit 1}
-        java -jar ../bin/src/graphene.jar $file "graphenec"; break;
+        java -jar ../bin/src/graphene.jar $file "graphenec";
+        $file = '../bin/' + (Split-Path -Path $file -Leaf) + '.tm'
+        $tmOutStr = & "../bin/tm-cli-go.exe" $file
+        $output = $tmOutStr -split "`n" | Where-Object {$_ -match "^OUT instruction prints: "} | ForEach-Object {
+            ($_ -split ": ")[1].Trim()
+        }
+        $output | ForEach-Object {Write-Output $_}
+        break;
     }
 }
 '@
