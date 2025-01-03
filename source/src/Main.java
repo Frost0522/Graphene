@@ -16,6 +16,8 @@ public class Main {
 
         if (!args[0].substring(args[0].length()-3).equals(".gr")) {args[0]+=".gr";}
         String fileName = args[0].substring(Math.max(args[0].lastIndexOf("/"),args[0].lastIndexOf("\\"))+1);
+        String fileNameTmExt = fileName.substring(0,fileName.length()-3)+
+        fileName.substring(fileName.length()-3,fileName.length()).replace(".gr",".tm");
         File file = new File(args[0]);
         Main input = new Main(args[1]);
 
@@ -56,10 +58,8 @@ public class Main {
                 parser.nStack.peek().accept(semanticAnalyzer);
                 CodeGen codeGen = new CodeGen();
                 parser.nStack.peek().accept(codeGen);
-                System.out.println(codeGen.getTargetStr());
-                BufferedWriter writer = new BufferedWriter(new FileWriter("../bin/"+fileName.substring(0,fileName.length()-3)+
-                    fileName.substring(fileName.length()-3,fileName.length()).replace(".gr",".tm")
-                )); writer.write(codeGen.getTargetStr()); writer.close();
+                BufferedWriter writer = new BufferedWriter(new FileWriter("../bin/"+fileNameTmExt)); 
+                writer.write(codeGen.getTargetStr()); writer.close();
                 break;
             }
             default: {
