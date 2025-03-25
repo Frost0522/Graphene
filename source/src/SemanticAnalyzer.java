@@ -29,7 +29,7 @@ public class SemanticAnalyzer implements AstVisitor {
     @Override
     public void visit(FnNode fnNode) throws Analyzer {
         currentFnNode = fnNode;
-        currentFnName = fnNode.getIdNode().toString().replace("identifier ","");
+        currentFnName = fnNode.getName();
         fnNode.getIdNode().accept(this);
         if (!(table.getCallNames().contains(currentIdNode.getName()) || currentIdNode.getName().equals("main")) && 
             !currentIdNode.getName().equals("print")) {
@@ -108,7 +108,8 @@ public class SemanticAnalyzer implements AstVisitor {
     @Override
     public void visit(CallNode callNode) throws Analyzer {
         // First check to see of the funciton call is a primitive print.
-        if (table.isPrint(callNode.getId())) {
+        if (callNode.getName().equals("print")) {
+            callNode.getId().accept(this);
             callNode.setSemanticType(Lex.PRINTEXP);
             for (Node arg : callNode.getArgs()) {
                 arg.accept(this);
@@ -139,7 +140,7 @@ public class SemanticAnalyzer implements AstVisitor {
             }
             // Verify type correctness for the arguments of the call to the function it is referncing.
             for (int i=0; i<=callNode.getArgs().size()-1; i++) {
-                if (callNode.getArgs().get(i).getSemanticType()!=table.get(refFunction.getIdNode().toString().replace("identifier ","")).getIdTypes().get(i)) {
+                if (callNode.getArgs().get(i).getSemanticType()!=table.get(refFunction.getName()).getIdTypes().get(i)) {
                     new Analyzer(Lex.BADARGTYPE,callNode.getArgs().get(i));
                 }
             }
@@ -195,7 +196,7 @@ public class SemanticAnalyzer implements AstVisitor {
 
     @Override
     public void visit(IdNode idNode) throws Analyzer {
-        // If the id node matches a parameter in the parameter list, set it's type
+        // If the id node matches a parameter in the parameter list, set it's type.
         if (idNode.getSemanticType()==null) {
             int idIndex = table.get(currentFnName).getParamIdStrs().indexOf(idNode.getName());
             if (idIndex!=-1) {
@@ -213,10 +214,13 @@ public class SemanticAnalyzer implements AstVisitor {
         if (litNode.getSemanticType()==Lex.BOOLEAN && litNode.getSign()==Lex.MINUS) {
             new Analyzer(Lex.SIGNANDTYPEMISSMATCH,litNode);
         }
-        currentFnNode.getIdNode().accept(this);
-        if (!table.get(currentIdNode.getName()).hasStaticData(litNode) || table.isPrint(currentFnNode.getIdNode())) {
-            table.get(currentIdNode.getName()).addStaticData(litNode);
+        if (!currentIdNode.getName().equals("print")) {
+            currentFnNode.getIdNode().accept(this);
+            if (!table.get(currentIdNode.getName()).hasStaticData(litNode)) {
+                table.get(currentIdNode.getName()).addStaticData(litNode.getValue());
+            }
         }
+        currentFnNode.getIdNode().accept(this);
     }
 
     public String toString() {return table.toString().trim();}
@@ -234,17 +238,13 @@ class SymbolTable implements AstVisitor {
     private Boolean bodyId;
 
     public SymbolTable(Node node) throws Analyzer {node.accept(this);}
+    protected ArrayList<String> getFnNames() {return fnNameArray;}
     protected ArrayList<String> getCallNames() {return callNames;}
     protected FunctionSymbol get(String key) {return map.get(key);}
     protected Boolean hasId(FnNode fnNode, Node idNode) {
-        if (map.get(fnNode.getIdNode().toString().replace("identifier ","")).getParamIdStrs().contains(
-            idNode.toString().replace("identifier ",""))) {
+        if (map.get(fnNode.getName()).getParamIdStrs().contains(idNode.getName())) {
             return true;
         } return false;
-    }
-    protected Boolean isPrint(Node idNode) {
-        if (idNode.toString().equals("identifier print")) {return true;}
-        return false;
     }
 
     @Override
@@ -365,7 +365,7 @@ class SymbolTable implements AstVisitor {
         private ArrayList<Lex> idTypes;
         private ArrayList<IdNode> idNodes;
         private ArrayList<CallNode> calleeNodes;
-        private ArrayList<Node> staticData;
+        private ArrayList<Integer> staticData;
 
         public FunctionSymbol(FnNode fnNode) {
             this.fnNode = fnNode;
@@ -394,22 +394,20 @@ class SymbolTable implements AstVisitor {
         protected ArrayList<String> getCalleeNames() {
             stringArray = new ArrayList<>();
             for (CallNode callee : getCalleeNodes()) {
-                if (!stringArray.contains(callee.getId().toString().replace("identifier ",""))) {
-                    stringArray.add(callee.getId().toString().replace("identifier ",""));
+                if (!stringArray.contains(callee.getName())) {
+                    stringArray.add(callee.getName());
                 }
             }
             return stringArray;
         }
         protected Boolean hasStaticData(LitNode litNode) {
-            for (Node staticNode : getStaticData()) {
-                if (staticNode.toString().equals(litNode.toString())) {
-                    return true;
-                }
-            } return false;
+            if (staticData.contains(litNode.getValue())) {return true;} 
+            return false;
         }
-        protected void addStaticData(Node litNode) {staticData.add(litNode);}
+
+        protected void addStaticData(Integer i) {staticData.add(i);}
         protected FnNode getFnNode() {return this.fnNode;}
-        protected ArrayList<Node> getStaticData() {return staticData;}
+        protected ArrayList<Integer> getStaticData() {return staticData;}
         protected ArrayList<IdNode> getParamNodes() {return paramNodes;}
         protected ArrayList<Lex> getIdTypes() {return idTypes;}
         protected ArrayList<CallNode> getCalleeNodes() {return calleeNodes;}
