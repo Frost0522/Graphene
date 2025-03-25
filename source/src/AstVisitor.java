@@ -35,6 +35,7 @@ abstract class Node {
     abstract Lex getSemanticType();
     abstract void setSemanticType(Lex type);
     abstract String getErrorStr();
+    abstract String getName();
 }
 
 class NullNode extends Node {
@@ -49,6 +50,7 @@ class NullNode extends Node {
     protected Lex getSemanticType() {return null;}
     protected void setSemanticType(Lex type) {}
     protected String getErrorStr() {return "";}
+    protected String getName() {return "";}
 }
 
 class IdNode extends Node {
@@ -101,6 +103,7 @@ class TypeNode extends Node {
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
     protected String getErrorStr() {return this.toString();}
+    protected String getName() {return "";}
 }
 
 class ReturnNode extends TypeNode {
@@ -154,6 +157,7 @@ class LitNode extends Node {
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
     protected String getErrorStr() {return this.toString();}
+    protected String getName() {return "";}
 }
 
 class ParamNode extends Node {
@@ -180,6 +184,7 @@ class ParamNode extends Node {
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
     protected String getErrorStr() {return this.toString();}
+    protected String getName() {return id.toString().replace("identifier ","");}
 }
 
 class FnNode extends Node {
@@ -222,6 +227,7 @@ class FnNode extends Node {
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
     protected String getErrorStr() {return id.toString();}
+    protected String getName() {return id.toString().replace("identifier ","");}
 }
 
 class CallNode extends Node {
@@ -248,6 +254,7 @@ class CallNode extends Node {
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
     protected String getErrorStr() {return "function call "+"'"+id.toString().replace("identifier ","")+"'";}
+    protected String getName() {return id.toString().replace("identifier ","");}
 }
 
 class IfNode extends Node {
@@ -275,6 +282,7 @@ class IfNode extends Node {
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
     protected String getErrorStr() {return "";}
+    protected String getName() {return "";}
 }
 
 class PrgrmNode extends Node {
@@ -303,6 +311,7 @@ class PrgrmNode extends Node {
     protected void setSymbolTable(SymbolTable symbolTable) {this.symbolTable = symbolTable;}
     protected SymbolTable getSymbolTable() {return this.symbolTable;}
     protected String getErrorStr() {return "";}
+    protected String getName() {return "";}
 }
 
 class ExpNode extends Node {
@@ -329,6 +338,7 @@ class ExpNode extends Node {
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
     protected String getErrorStr() {return "";}
+    protected String getName() {return "";}
 }
 
 class NotNode extends Node {
@@ -353,6 +363,7 @@ class NotNode extends Node {
     protected int[] setPosition() {return new int[]{};}
     protected int[] position() {return notNode.position();}
     protected String getErrorStr() {return "";}
+    protected String getName() {return "";}
 }
 
 class BinaryNode extends Node {
@@ -380,6 +391,7 @@ class BinaryNode extends Node {
     protected void setSemanticType(Lex type) {semanticType = type;}
     protected String getErrorStr() {return "";}
     protected void accept(AstVisitor visitor) throws Analyzer {visitor.visit(this);}
+    protected String getName() {return "";}
 }
 
 class EqNode extends BinaryNode {public EqNode(Stack<Node> stack) {super(stack, "==", Lex.EQUIVALENT);}}
