@@ -55,11 +55,12 @@ public class Main {
                 Scanner scanner = new Scanner(pushReader);
                 Parser parser = new Parser(scanner);
                 SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
-                parser.nStack.peek().accept(semanticAnalyzer);
                 CodeGen codeGen = new CodeGen();
+                parser.nStack.peek().accept(semanticAnalyzer);
                 parser.nStack.peek().accept(codeGen);
-                BufferedWriter writer = new BufferedWriter(new FileWriter("../bin/"+fileNameTmExt)); 
-                writer.write(codeGen.getTargetStr()); writer.close();
+                // System.out.println(codeGen.getImem());
+                // BufferedWriter writer = new BufferedWriter(new FileWriter("../bin/"+fileNameTmExt));
+                // writer.write(codeGen.getImem()); writer.close();
                 break;
             }
             default: {
