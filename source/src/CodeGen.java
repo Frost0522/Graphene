@@ -1,167 +1,87 @@
 package src;
 import java.util.ArrayList;
 import java.util.Stack;
+import src.SymbolTable.FunctionSymbol;
 
 public class CodeGen implements AstVisitor {
 
     private SymbolTable symbolTable;
-    private Stack<StackFrame> controlStack;
-    private StringBuilder targetStr;
-    private LitNode currentLit;
-    private IdNode currentId;
-    private int[] dmem, imem;
-    private int nextAddress = 1;
+    private Stack<StackFrame> callStack = new Stack<>();
+    private StringBuilder imem = new StringBuilder();
+    private int fp, counter;
 
-    private int getAddress(int val) {
-        int address = -1;
-        for (int i = 1; nextAddress>=i; i++) {
-            if (dmem[i]==val) {address = i; break;}
-        } return address;
+    private void makeFrame(String name) throws Analyzer {
+        callStack.push(new StackFrame(symbolTable.get(name)));
     }
 
-    protected String getTargetStr() {return targetStr.toString().trim();}
+    protected String getImem() {return imem.toString();}
     
-    @SuppressWarnings("incomplete-switch")
-    private void code(Lex op, int r1, int off, int r2, StringBuilder b) {
-        switch (op) {
-            case LDC: {
-                imem[r1] = off;
-                b.append(imem[7]+": "+op.toString()+" "+r1+","+imem[1]+"("+r2+")\n");
-                imem[7]+=1; break;
-            }
-            case LDA: {
-                if (r1==7) {
-                    int prevR7 = imem[7];
-                    int address = off + imem[r2];
-                    imem[r1] = address;
-                    b.append(prevR7+": "+op.toString()+" "+r1+","+off+"("+r2+")\n");
-                }
-                else {
-                    int address = off + imem[r2];
-                    imem[r1] = address;
-                    b.append(imem[7]+": "+op.toString()+" "+r1+","+off+"("+r2+")\n");
-                    imem[7]+=1;
-                } break;
-            }
-            case ST: {
-                int address = off + imem[r2];
-                dmem[address] = imem[r1];
-                b.append(imem[7]+": "+op.toString()+" "+r1+","+off+"("+r2+")\n");
-                imem[7]+=1; nextAddress+=1; break;
-            }
-            case LD: {
-                if (r1==7) {
-                    int prevR7 = imem[7];
-                    imem[r1] = dmem[off];
-                    b.append(prevR7+": "+op.toString()+" "+r1+","+off+"("+r2+")\n");
-                }
-                else {
-                    imem[r1] = dmem[off];
-                    b.append(imem[7]+": "+op.toString()+" "+r1+","+off+"("+r2+")\n");
-                    imem[7]+=1;
-                } break;
-            }
-            case OUT: {
-                b.append(imem[7]+": "+op.toString()+" "+r1+","+off+","+r2+"\n");
-                imem[7]+=1; break;
-            }
-            case HALT: {
-                b.append(imem[7]+": "+op.toString()+" 0,0,0\n"); break;
-            }
-        }
-    }
-
-    @SuppressWarnings("incomplete-switch")
-    private void write(Lex op, int r1, int off, int r2, StringBuilder b) {
-        switch (op) {
-            case LDA: {
-                b.append(imem[7]+": "+op.toString()+" "+r1+","+off+"("+r2+")\n");
-                imem[7]+=1; break;
-            }
-        }
-    }
-
     @Override
     public void visit(PrgrmNode prgrmNode) throws Analyzer {
-        
-        symbolTable = prgrmNode.getSymbolTable();
-        controlStack = new Stack<>();
-        targetStr = new StringBuilder();
-        dmem = new int[1024]; imem = new int[8];
-        symbolTable.get("main").getFnNode().accept(this);
+        symbolTable = prgrmNode.getSymbolTable(); fp = 1;
+        makeFrame("main");
+        for (String fnName : symbolTable.getFnNames()) {
+            if (!fnName.equals("main")) {makeFrame(fnName);}
+        }
+        for (StackFrame frame : callStack) {
+            imem.append(frame.code);
+        }
     }
-
-    @Override
-    public void visit(FnNode fnNode) throws Analyzer {
-
-        fnNode.getIdNode().accept(this);
-        for (Node paramNode : fnNode.getParamNodes()) {
-            // To-Do: Load and store parameters
-        }
-
-        code(Lex.LDA,6,1,7,targetStr);
-        imem[7]+=3;
-
-        for (Node bodyNode : fnNode.getBodyNodes()) {
-            if (bodyNode instanceof CallNode) {
-                StackFrame frame = new StackFrame();
-                bodyNode.accept(frame);
-                controlStack.push(frame);
-            }
-        }
-
-        StringBuilder returnVal = new StringBuilder();
-        int controlLink = imem[7];
-
-        while (!controlStack.isEmpty()) {
-            StackFrame frame = controlStack.pop();
-            returnVal.append(frame.getReturnVal());
-            code(Lex.ST,6,nextAddress,0,returnVal);
-            code(Lex.LDA,6,1,7,returnVal);
-            write(Lex.LDA,7,frame.controlLink,0,returnVal);
-        }
-
-        code(Lex.LD,7,nextAddress-1,0,returnVal);
-        write(Lex.LDA,7,controlLink,0,targetStr);
-        code(Lex.OUT,1,0,0,targetStr);
-        code(Lex.HALT,0,0,0,targetStr);
-
-        targetStr.append(returnVal);
-    }
-
-    @Override
-    public void visit(LitNode litNode) {currentLit = litNode;}
-    @Override
-    public void visit(IdNode idNode) {currentId = idNode;}
 
     class StackFrame implements AstVisitor {
 
-        StringBuilder returnVal = new StringBuilder();
-        String name;
-        ArrayList<Node> argVals;
-        int[] saveState;
-        int controlLink;
+        private StringBuilder code = new StringBuilder();
+        private int currentInt, controlLink;
+        private String frameName;
+        private ArrayList<Integer> staticData;
 
-        @Override
-        public void visit(CallNode callNode) throws Analyzer {
-            name = callNode.getId().toString().replace("identifier ","");
-            argVals = callNode.getArgs();
-            saveState = imem;
-            controlLink = imem[7];
-            if (name.equals("print") && argVals.get(0) instanceof LitNode) {
-                argVals.get(0).accept(this);
-                code(Lex.LDC,1,currentLit.getValue(),0,returnVal);
-                code(Lex.OUT,1,0,0,returnVal);
-                write(Lex.LDA,7,0,6,returnVal);
+        public StackFrame(FunctionSymbol symbol) throws Analyzer {
+            staticData = symbol.getStaticData();
+            frameName = symbol.getFnNode().getName();
+            if (frameName.equals("main")) {
+                // Check symbol for parameters to allocate.
+                for (Node param : symbol.getParamNodes()) {/* to-do */}
+                if (symbol.getStaticData().size()<6) {
+                    Integer register = 0;
+                    for (Integer i : symbol.getStaticData()) {
+                        code.append(counter+": LDC "+register+","+i+"(0)\n"); counter++;
+                        register++;
+                    }
+                }
+                code.append(counter+": LDA 6,1(7)\n"); counter++;
+                code.append(counter+": LDA 7,5(1)\n"); counter++;
+                code.append(counter+": OUT 0,0,0\n"); counter++;
+                code.append(counter+": HALT 0,0,0\n"); counter++;
+                for (Node node : symbol.getFnNode().getBodyNodes()) {node.accept(this);}
             }
         }
 
-        String getReturnVal() {return returnVal.toString();}
+        @Override
+        public void visit(CallNode callNode) throws Analyzer {
+            code.append(counter+": ST 6,"+fp+"(1)\n"); counter++;
+            controlLink = fp; fp++;
+            code.append(counter+": LDA 6,1(7)\n"); counter++;
+            code.append(counter+": LDA 7,"+(counter+2)+"(1)\n"); counter++;
+            code.append(counter+": LD 7,1("+controlLink+")\n"); counter++;
+            if (callNode.getName().equals("print")) {
+                Node argNode = callNode.getArgs().getFirst();
+                argNode.accept(this);
+                if (argNode.getSemanticType().equals(Lex.INTEGER)) {
+                    if (staticData.contains(currentInt)) {
+                        code.append(counter+": OUT "+staticData.indexOf(currentInt)+",0,0\n"); counter++;
+                    }
+                    else {
+                        code.append(counter+": LDC 4,"+currentInt+"(0)\n"); counter++;
+                        code.append(counter+": OUT 4,0,0\n"); counter++;    
+                    }
+                }
+            code.append(counter+": LDA 7,0(6)\n"); counter++;
+            }
+        }
 
         @Override
-        public void visit(LitNode litNode) {currentLit = litNode;}
-
-        @Override
-        public void visit(IdNode idNode) {currentId = idNode;}
+        public void visit(LitNode litNode) throws Analyzer {
+            currentInt = litNode.getValue();
+        }
     }
 }
