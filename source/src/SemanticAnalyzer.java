@@ -1,6 +1,10 @@
 package src;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 
 public class SemanticAnalyzer implements AstVisitor {
 
@@ -229,6 +233,7 @@ public class SemanticAnalyzer implements AstVisitor {
 class SymbolTable implements AstVisitor {
 
     private HashMap<String,FunctionSymbol> map = new HashMap<>();
+    private LinkedHashMap<Integer,Set<String>> staticData = new LinkedHashMap<>();
     private FunctionSymbol fnSymbol;
     private TypeNode currentTypeNode;
     private IdNode currentIdNode;
@@ -236,11 +241,15 @@ class SymbolTable implements AstVisitor {
     private ArrayList<String> callNames = new ArrayList<>();
     private ArrayList<String> fnNameArray = new ArrayList<>();
     private Boolean bodyId;
+    private void addStaticData(Map<Integer, Set<String>> map, int key, String name) {
+        map.computeIfAbsent(key, k -> new HashSet<>()).add(name);
+    }
 
     public SymbolTable(Node node) throws Analyzer {node.accept(this);}
     protected ArrayList<String> getFnNames() {return fnNameArray;}
     protected ArrayList<String> getCallNames() {return callNames;}
     protected FunctionSymbol get(String key) {return map.get(key);}
+    protected HashMap<Integer,Set<String>> getStaticData() {return staticData;}
     protected Boolean hasId(FnNode fnNode, Node idNode) {
         if (map.get(fnNode.getName()).getParamIdStrs().contains(idNode.getName())) {
             return true;
@@ -320,6 +329,11 @@ class SymbolTable implements AstVisitor {
     @Override
     public void visit(TypeNode typeNode) {
         currentTypeNode = typeNode;
+    }
+
+    @Override
+    public void visit(LitNode litNode) {
+        addStaticData(staticData,litNode.getValue(),fnSymbol.getFnNode().getName());
     }
 
     public String toString() {
