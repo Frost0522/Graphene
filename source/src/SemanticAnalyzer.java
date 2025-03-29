@@ -124,9 +124,9 @@ public class SemanticAnalyzer implements AstVisitor {
             }
         } else {
             callNode.getId().accept(this);
-            FnNode refFunction = table.get(currentIdNode.getName()).getFnNode();
             // If a function does not exist for this call throw an error.
             if (table.get(currentIdNode.getName())==null) {new Analyzer(Lex.NOFNCALL,callNode);}
+            FnNode refFunction = table.get(currentIdNode.getName()).getFnNode();
             // Verify the call's number of arguments equal the number of parameters to the function it is referencing.
             if (refFunction.getParamNodes().size()>callNode.getArgs().size()) {
                 new Analyzer(Lex.TOOFEWARGS,callNode);
@@ -333,7 +333,10 @@ class SymbolTable implements AstVisitor {
 
     @Override
     public void visit(LitNode litNode) {
-        addStaticData(staticData,litNode.getValue(),fnSymbol.getFnNode().getName());
+        // The fourth register is reserved for value zero and will always be accessible.
+        if (litNode.getValue()!=0) {
+            addStaticData(staticData,litNode.getValue(),fnSymbol.getFnNode().getName());
+        }
     }
 
     public String toString() {
