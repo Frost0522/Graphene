@@ -1,6 +1,6 @@
 package src;
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
 public enum Lex {
 
@@ -24,9 +24,10 @@ public enum Lex {
     PRIMITIVEFN, PRIMITIVEPARAM, NOMAIN, INTOPERROR, BOOLOPERROR, NOID, RETURNTYPEERROR,
     DIFFOPERANDS, NOFNCALL, TOOFEWARGS, TOOMANYARGS, BADARGTYPE, IFOPERROR, DIFFCLAUSES,
     FNNAMECONFLICT, PARAMNAMECONFLICT, UNUSEDFN, UNUSEDPARAM, NOTOPERROR, SIGNANDTYPEMISSMATCH,
+    PRIMITIVEBINARY, PRIMITIVEUNARY, PRIMITIVEARG, MISSINGMAINARGS, EXCESSMAINARGS,
 
     // Opcodes for code generation
-    LDC, ST, LDA, LD, OUT, HALT;
+    ASSIGN, CALL, ARG, CONST, BEGINCALL, ENDCALL, ENTRY, EXIT, JMP, LABEL, PARAM, PRINT, EQ, ADD;
 
     @SuppressWarnings("incomplete-switch")
     public int value() {
@@ -70,8 +71,8 @@ public enum Lex {
     }
 
 // Used in state 1 to create various tokens of the language.
-    public static ConcurrentHashMap<Lex, int[]> getMap() {
-        ConcurrentHashMap<Lex, int[]> map = new ConcurrentHashMap<>();
+    public static HashMap<Lex, int[]> getMap() {
+        HashMap<Lex, int[]> map = new HashMap<>();
         map.put(Lex.INTEGER, new int[]{105,110,116,101,103,101,114});
         map.put(Lex.BOOLEAN, new int[]{98,111,111,108,101,97,110});
         map.put(Lex.IF, new int[]{105,102});
@@ -126,7 +127,7 @@ public enum Lex {
         return new Lex[]{FN,RIGHTPAREN,COMMA,EQUIVALENT,LESSTHAN,OR,PLUS,MINUS,AND,TIMES,DIVIDE,NOT,IF,ELSE,ID,BOOLEANLITERAL,INTEGERLITERAL,$};
     }
 
-// Rules of the parse table that get pushed on to the parse stack. new Lex[]{
+// Rules of the parse table that get pushed on to the parse stack.
     public static Lex[] definitionRules() {return new Lex[]{MKFN,BODY,MKRETURNTYPE,TYPE,RETURN,RIGHTPAREN,PARAMLIST,LEFTPAREN,MKID,ID,FN};}
     public static Lex[] printExpRules() {return new Lex[]{MKFNCALL,RIGHTPAREN,EXP,LEFTPAREN,MKARGS,MKID,ID};}
     public static Lex[] formalParamRules() {return new Lex[]{FORMALPARAMTAIL,MKPARAM,IDWITHTYPE};}
