@@ -1,2 +1,0 @@
-fn main(a:integer,b:integer) -> boolean
-   a > b

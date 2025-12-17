@@ -1,2 +1,0 @@
-fn negative?(n : integer ) -> boolean
-   n < 0
