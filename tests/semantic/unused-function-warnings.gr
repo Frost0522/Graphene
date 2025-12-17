@@ -1,0 +1,3 @@
+fn main() -> integer 1
+fn unusedCall(bool:boolean) -> boolean anotherCall(bool)
+fn anotherCall(bool:boolean) -> boolean anotherCall(bool)

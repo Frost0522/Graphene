@@ -1,0 +1,2 @@
+fn main() -> integer 1
+fn print() -> integer 1
