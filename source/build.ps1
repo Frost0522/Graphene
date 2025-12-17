@@ -1,5 +1,5 @@
-#Optional bind to update scripts
-[CmdletBinding()] 
+#To update scripts
+[CmdletBinding()]
 param(
     [switch]$reload,
     $isGenerated
@@ -7,7 +7,6 @@ param(
 
 # Script content
 $grapheneContent = @'
-[CmdletBinding()]
 param (
     [switch]$s,
     [switch]$f,
@@ -38,21 +37,21 @@ switch ($true) {
         if ($file) {Write-Host "No positional argument needed."; exit 1}
         $files = Get-ChildItem -Path "../programs/*.gr";
         $files | ForEach-Object {
-            java -jar ../bin/src/graphene.jar ("../programs/" + $_.BaseName) "graphenec";
+            java -jar ../bin/src/graphene.jar ("../programs/" + $_.BaseName) "graphenec" $args;
             if ($_ -ne $files[-1]) {Write-Host ""}
         }
         break;
     }
     default {
         if (-not $file) {Write-Host "A positional argument for a Graphene file name must be provided."; exit 1}
-        java -jar ../bin/src/graphene.jar $file "graphenec";
+        java -jar ../bin/src/graphene.jar $file "graphenec" $args;
         $file = '../bin/' + (Split-Path -Path $file -Leaf) + '.tm'
         $tmOutStr = & "../bin/tm-cli-go.exe" $file
-        $output = $tmOutStr -split "`n" | Where-Object {$_ -match "^OUT instruction prints: "} | ForEach-Object {
-            ($_ -split ": ")[1].Trim()
+        $numbers = $tmOutStr | Where-Object { $_.StartsWith('O') } | ForEach-Object {
+            ($_ -split '\s+')[-1] -as [int]
         }
-        $output | ForEach-Object {Write-Output $_}
-        break;
+        Write-Output $numbers
+        if (Test-Path $file) {Remove-Item ../bin/$file}
     }
 }
 '@
