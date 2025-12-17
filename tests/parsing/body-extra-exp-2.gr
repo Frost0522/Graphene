@@ -1,0 +1,9 @@
+fn main() -> integer
+  1
+
+fn fun1() -> integer
+  1
+  1
+
+fn fun2() -> integer
+  1
