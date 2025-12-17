@@ -12,30 +12,19 @@ public class Token {
         this.charList = setList(charList);
     }
 
-    public Lex getType() {
-        return type;
-    }
+    public Lex getType() {return type;}
 
     public String getName() {
         StringBuilder builder = new StringBuilder();
-        for (int i : charList) {
-            builder.append((char)i);
-        }
+        for (int i : charList) {builder.append((char)i);}
         return builder.toString();
     }
 
-    public ArrayList<Integer> getCharList() {
-        return charList;
-    }
+    public ArrayList<Integer> getCharList() {return charList;}
 
-    public int getSize() {
-        return charList.size();
-    }
+    public int getSize() {return charList.size();}
 
     private ArrayList<Integer> setList(ArrayList<Integer> list) {
-        for (Integer entry : list) {
-            charList.add(entry);
-        }
-        return charList;
+        for (Integer entry : list) {charList.add(entry);} return charList;
     }
 }

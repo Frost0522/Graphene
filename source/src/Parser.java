@@ -18,22 +18,10 @@ public class Parser {
         tokenLst = scanner.tokenLst;
         nextToken = tokenLst.get(0);
 
-        pStack.push(Lex.$);
-        pStack.push(Lex.MKPROGRAM);
-        pStack.push(Lex.PROGRAM);
+        pStack.push(Lex.$); pStack.push(Lex.MKPROGRAM); pStack.push(Lex.PROGRAM);
     
-        try {
-            while (run) {
-                semanticAction();
-                parseTable();
-                removeTerminal();
-                isDone();
-            }
-        }
-        catch (Analyzer err) {
-            System.out.println(err.getMessage());
-            System.exit(0);
-        }
+        try {while (run) {semanticAction(); parseTable(); removeTerminal(); isDone();}}
+        catch (Analyzer err) {System.out.println(err.getMessage()); System.exit(0);}
     }
 
     private void parseTable() throws Analyzer {
@@ -42,82 +30,58 @@ public class Parser {
             case PROGRAM: {
                 if (nextType == Lex.FN || nextType == Lex.$) {
                     pStack.pop(); pStack.push(Lex.DEFINITIONLIST); break;
-                }
-                new Analyzer(tokenLst, deadLst, pStack);
+                } new Analyzer(tokenLst, deadLst, pStack);
             }
             case DEFINITIONLIST: {
-                if (nextType == Lex.FN) {
-                    pStack.push(Lex.DEFINITION); break;
-                }
+                if (nextType == Lex.FN) {pStack.push(Lex.DEFINITION); break;}
                 if (nextType == Lex.$) {pStack.pop(); break;}
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case DEFINITION: {
                 if (nextType == Lex.FN) {
                     pStack.pop(); for (Lex rule : Lex.definitionRules()) {pStack.push(rule);} break;
-                }
-                new Analyzer(tokenLst, deadLst, pStack);
+                } new Analyzer(tokenLst, deadLst, pStack);
             }
             case PARAMLIST: {
-                if (nextType == Lex.RIGHTPAREN) {
-                    pStack.pop();
-                    break;
-                }
-                if (nextType == Lex.ID) {
-                    pStack.pop(); pStack.push(Lex.FORMALPARAM); break;
-                }
+                if (nextType == Lex.RIGHTPAREN) {pStack.pop(); break;}
+                if (nextType == Lex.ID) {pStack.pop(); pStack.push(Lex.FORMALPARAM); break;} 
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case FORMALPARAM: {
                 if (nextType == Lex.ID) {
                     pStack.pop(); for (Lex rule : Lex.formalParamRules()) {pStack.push(rule);} break;
-                }
-                new Analyzer(tokenLst, deadLst, pStack);
+                } new Analyzer(tokenLst, deadLst, pStack);
             }
             case FORMALPARAMTAIL: {
-                if (nextType == Lex.RIGHTPAREN) {
-                    pStack.pop(); break;
-                }
+                if (nextType == Lex.RIGHTPAREN) {pStack.pop(); break;}
                 if (nextType == Lex.COMMA) {
                     pStack.pop(); for (Lex rule : Lex.formalParamTailRules()) {pStack.push(rule);} break;
-                }
-                new Analyzer(tokenLst, deadLst, pStack);
+                } new Analyzer(tokenLst, deadLst, pStack);
             }
             case IDWITHTYPE: {  
                 if (nextType == Lex.ID) {
                     pStack.pop(); for (Lex rule : Lex.idWithTypeRules()) {pStack.push(rule);} break;
-                }
-                new Analyzer(tokenLst, deadLst, pStack);
+                } new Analyzer(tokenLst, deadLst, pStack);
             }
             case TYPE: {
-                if (nextType == Lex.INTEGER) {
-                    pStack.pop(); pStack.push(Lex.INTEGER); break;
-                }
-                if (nextType == Lex.BOOLEAN) {
-                    pStack.pop(); pStack.push(Lex.BOOLEAN); break;
-                }
+                if (nextType == Lex.INTEGER) {pStack.pop(); pStack.push(Lex.INTEGER); break;}
+                if (nextType == Lex.BOOLEAN) {pStack.pop(); pStack.push(Lex.BOOLEAN); break;} 
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case BODY: {
-                if (compareList(Lex.getPrint(),tokenLst.get(0).getCharList())) {
-                    pStack.push(Lex.PRINTEXP); break;
-                }
-                if (listContains(nextType,Lex.isExpression())) {
-                    pStack.pop(); pStack.push(Lex.EXP); break;
-                }
+                if (compareList(Lex.getPrint(),tokenLst.get(0).getCharList())) {pStack.push(Lex.PRINTEXP); break;}
+                if (listContains(nextType,Lex.isExpression())) {pStack.pop(); pStack.push(Lex.EXP); break;} 
                 new Analyzer(tokenLst, deadLst, pStack);
             }
             case PRINTEXP: {
                 if (compareList(Lex.getPrint(),tokenLst.get(0).getCharList())) {
                     pStack.pop(); for (Lex rule : Lex.printExpRules()) {pStack.push(rule);} break;
-                }
-                new Analyzer(tokenLst, deadLst, pStack);
+                } new Analyzer(tokenLst, deadLst, pStack);
             }
             case EXP: {
                 if (listContains(nextType,Lex.isExpression())) {
                     pStack.pop(); for (Lex rule : Lex.expRules()) {pStack.push(rule);} break;
-                }
-                new Analyzer(tokenLst, deadLst, pStack);
+                } new Analyzer(tokenLst, deadLst, pStack);
             }
             case EXPTAIL: {
                 if (listContains(nextType,Lex.isExpTail())) {pStack.pop(); break;}
@@ -126,14 +90,12 @@ public class Parser {
                 }
                 if (nextType == Lex.LESSTHAN) {
                     pStack.pop(); for (Lex rule : Lex.lessThanRules()) {pStack.push(rule);} break;
-                }
-                new Analyzer(tokenLst, deadLst, pStack);
+                } new Analyzer(tokenLst, deadLst, pStack);
             }
             case SIMPLEEXP: {
                 if (listContains(nextType,Lex.isExpression())) {
                     pStack.pop(); for (Lex rule : Lex.simpleExpRules()) {pStack.push(rule);} break;
-                }
-                new Analyzer(tokenLst, deadLst, pStack);
+                } new Analyzer(tokenLst, deadLst, pStack);
             }
             case SIMPLEEXPTAIL: {
                 if (listContains(nextType,Lex.isSimpleExpTail())) {pStack.pop(); break;}
@@ -145,14 +107,12 @@ public class Parser {
                 }
                 if (nextType == Lex.MINUS) {
                     pStack.pop(); for (Lex rule : Lex.minusRules()) {pStack.push(rule);} break;
-                }
-                new Analyzer(tokenLst, deadLst, pStack);
+                } new Analyzer(tokenLst, deadLst, pStack);
             }
             case TERM: {
                 if (listContains(nextType,Lex.isExpression())) {
                     pStack.pop(); for (Lex rule : Lex.termRules()) {pStack.push(rule);} break;
-                }
-                new Analyzer(tokenLst, deadLst, pStack);
+                } new Analyzer(tokenLst, deadLst, pStack);
             }
             case TERMTAIL: {
                 if (listContains(nextType,Lex.isTermTail())) {pStack.pop(); break;}
@@ -164,13 +124,11 @@ public class Parser {
                 }
                 if (nextType == Lex.DIVIDE) {
                     pStack.pop(); for (Lex rule : Lex.divideRules()) {pStack.push(rule);} break;
-                }
-                new Analyzer(tokenLst, deadLst, pStack);
+                } new Analyzer(tokenLst, deadLst, pStack);
             }
             case FACTOR: {
                 if (nextType == Lex.BOOLEANLITERAL || nextType == Lex.INTEGERLITERAL) {
-                    pStack.pop(); pStack.push(Lex.LITERAL);
-                    break;
+                    pStack.pop(); pStack.push(Lex.LITERAL); break;
                 }
                 if (nextType == Lex.LEFTPAREN) {
                     pStack.pop(); for (Lex rule : Lex.leftParenFactorRules()) {pStack.push(rule);} break;
@@ -186,15 +144,13 @@ public class Parser {
                 }
                 if (nextType == Lex.ID) {
                     pStack.pop(); for (Lex rule : Lex.idRules()) {pStack.push(rule);} break;
-                }
-                new Analyzer(tokenLst, deadLst, pStack);
+                } new Analyzer(tokenLst, deadLst, pStack);
             }
             case ARGLIST: {
                 if (listContains(nextType,Lex.isArgList())) {pStack.pop(); break;}
                 if (nextType == Lex.LEFTPAREN) {
                     pStack.pop(); for (Lex rule : Lex.leftParenArgRules()) {pStack.push(rule);} break;
-                }
-                new Analyzer(tokenLst, deadLst, pStack);
+                } new Analyzer(tokenLst, deadLst, pStack);
             }
             case FORMALARG: {
                 if (listContains(nextType,Lex.isExpression())) {
@@ -207,8 +163,7 @@ public class Parser {
                 if (nextType == Lex.RIGHTPAREN) {pStack.pop(); break;}
                 if (nextType == Lex.COMMA) {
                     pStack.pop(); for (Lex rule : Lex.commaRules()) {pStack.push(rule);} break;
-                }
-                new Analyzer(tokenLst, deadLst, pStack);
+                } new Analyzer(tokenLst, deadLst, pStack);
             }
             case LITERAL: {
                 if (nextType == Lex.BOOLEANLITERAL) {
@@ -216,9 +171,8 @@ public class Parser {
                 }
                 if (nextType == Lex.INTEGERLITERAL) {
                     pStack.pop(); for (Lex rule : Lex.integerLitRules()) {pStack.push(rule);} break;
-                }
-                new Analyzer(tokenLst, deadLst, pStack);
-            }
+                } new Analyzer(tokenLst, deadLst, pStack);
+            } 
             default: {break;}
         }
     }
@@ -256,41 +210,30 @@ public class Parser {
 
         while (listContains(pStack.peek(),Lex.isTerminal())) {
             if (!pStack.peek().equals(tokenLst.get(0).getType())) {new Analyzer(tokenLst, deadLst, pStack);}
-            lastToken = tokenLst.get(0);
-            nextToken = getNextToken();
-            if (lastToken.getType()==Lex.MINUS && (!listContains(nextToken.getType(),Lex.canBeNegative()))) {new Analyzer(tokenLst, deadLst, pStack);}
-            pStack.pop();
-        }
-        return nextToken;
+            lastToken = tokenLst.get(0); nextToken = getNextToken();
+            if (lastToken.getType()==Lex.MINUS && (!listContains(nextToken.getType(),Lex.canBeNegative()))) {
+                new Analyzer(tokenLst, deadLst, pStack);
+            } pStack.pop();
+        } return nextToken;
     }
 
     private void isDone() {
         if (nStack.empty() && nextToken.getType().equals(Lex.$)) {System.exit(0);}
-        if (pStack.peek().equals(Lex.$) && nextToken.getType().equals(Lex.$)) {
-            run = false;
-        }
+        if (pStack.peek().equals(Lex.$) && nextToken.getType().equals(Lex.$)) {run = false;}
     }
 
     private static boolean listContains(Lex type,Lex[] list) {
-        for (Lex item : list) {if (type==item) {return true;}}
-        return false;
+        for (Lex item : list) {if (type==item) {return true;}} return false;
     }
 
     private Token getNextToken() {
-        if (tokenLst.size() == 1) {
-            return tokenLst.get(0);
-        }
-        deadLst.add(tokenLst.remove(0));
-        return tokenLst.get(0);
+        if (tokenLst.size() == 1) {return tokenLst.get(0);}
+        deadLst.add(tokenLst.remove(0)); return tokenLst.get(0);
     }
 
     protected boolean compareList(int[] intLst, ArrayList<Integer>intArray) {        
         if (intLst.length==intArray.size()) {
-            for (int i : intLst) {
-                if (!intArray.contains(i)) {
-                    return false;
-                }
-            } return true;
+            for (int i : intLst) {if (!intArray.contains(i)) {return false;}} return true;
         } else return false;
     }
 }

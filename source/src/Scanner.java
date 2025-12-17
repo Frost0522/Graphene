@@ -13,6 +13,7 @@ public class Scanner {
     protected static PushbackReader pushReader;
 
     public Scanner(PushbackReader reader) throws Analyzer, IOException {
+        
         pushReader = reader;
         Boolean run = true;
 
@@ -29,32 +30,19 @@ public class Scanner {
                 Token token = startState.process(stateLst, charLst, Scanner.next());
                 if (token.getType().equals(Lex.NL)) {++line; column = 1;}
                 else if (token.getType().equals(Lex.SKIP)) {++column;}
-                else {
-                    token.column = column;
-                    token.line = line;
-                    column += token.getCharList().size();
-                    tokenLst.add(token);
-                }
-                if (token.getType().equals(Lex.$)) {
-                    run = false;
-                }
-                charLst.clear();
-            }
-            catch (Analyzer err) {
+                else {token.column = column; token.line = line;
+                    column += token.getCharList().size(); tokenLst.add(token);
+                } if (token.getType().equals(Lex.$)) {run = false;} charLst.clear();
+            } catch (Analyzer err) {
                 System.out.println("Line " + line + " Column " + column + "\n" + err.getMessage() + "\n");
                 System.exit(0);
             }
         }
     }
 
-    protected static int next() throws IOException {
-        return pushReader.read();
-    }
-
+    protected static int next() throws IOException {return pushReader.read();}
     protected static int peek() throws IOException {
-        int value = pushReader.read();
-        pushReader.unread(value);
-        return value;
+        int value = pushReader.read(); pushReader.unread(value); return value;
     }
 
     public String toString() {
@@ -70,7 +58,6 @@ public class Scanner {
                 case $: {builder.append("end of file $"); break;}
                 default: break;
             }
-        }
-        return builder.toString().trim();
+        } return builder.toString().trim();
     }
 }
