@@ -15,6 +15,3 @@ source/graphenes.ps1
 source/graphenef.ps1
 source/graphenep.ps1
 source/graphenev.ps1
-
-#Ignore specific test file used for debugging
-tests/tmp.gr
