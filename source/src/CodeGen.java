@@ -1,97 +1,91 @@
 package src;
-import java.util.Set;
+import java.util.ArrayList;
 import java.util.Stack;
+import src.SemanticAnalyzer.SymbolTable;
 
 public class CodeGen implements AstVisitor {
 
-    private SymbolTable symbolTable;
     private Stack<StackFrame> callStack = new Stack<>();
-    private StringBuilder imem = new StringBuilder();
-    private int[] rmem = new int[8], dmem = new int [1024];
-    private int fp = 1, tos = 1;
+    private ArrayList<Tac> triplesArray = new ArrayList<>();
+    private int fp, tos, labelNum;
+    private SymbolTable symbolTable;
+    private StackFrame frame;
 
-    private void advFP() {rmem[5]++; tos++; rmem[6]++; fp++;}
-    private void stop() {imem.append(rmem[7]+": HALT 0,0,0\n"); rmem[7]++;}
-    private void output(int reg) {imem.append(rmem[7]+": OUT "+reg+",0,0\n"); rmem[7]++;}
-    private void link(int newCount) {imem.append(rmem[7]+": LDA 7,"+newCount+"(4)\n"); rmem[7]++;}
-    private void jmp(int newCount) {rmem[7] = newCount;}
-
-    private void ldConst(int register, int constant) {
-        imem.append(rmem[7]+": LDC "+register+","+constant+"(0)\n");
-        rmem[register] = constant; rmem[7]++;
-    }
-
-    private void stRtrnAddToReg() {
-        imem.append(rmem[7]+": LDA 6,1(7)\n");
-        rmem[6] = rmem[7] + 1; rmem[7]++;
-    }
-
-    private void stRtrnAddToMem() {
-        imem.append(rmem[7]+": ST 6,"+fp+"(4)\n");
-        dmem[fp] = rmem[6]; rmem[7]++; advFP();
-    }
-    
-    private void stConst(int r1, int offset, int r2) {
-        int address = rmem[r2] + offset;
-        imem.append(rmem[7]+": ST "+r1+","+offset+"("+r2+")\n");
-        dmem[address] = rmem[r1];
-        rmem[7]++; advFP();
-    }
-
-    private void callSeq() {}
-
-    private void initEntry() {
-        stRtrnAddToReg(); link(rmem[7]+3);
-        output(0); stop(); jmp(rmem[7]+3);
-    }
-
-    private void storeStaticData() {
-        Set<Integer> staticData = symbolTable.getStaticData().keySet();
-        if (staticData.size()<5) {
-            int reg = 0;
-            for (int con : symbolTable.getStaticData().keySet()) {
-                ldConst(reg,con); reg++;
-            }
-        }
-        else {
-            for (int con : symbolTable.getStaticData().keySet()) {
-                ldConst(0,con); stConst(0,0,6);
-            }
-        }
-    }
-    
     @Override
     public void visit(PrgrmNode prgrmNode) throws Analyzer {
-        rmem[5] = tos; rmem[6] = fp; dmem[0] = 1023;
+        fp=1; tos=Main.arguments.length-1; labelNum=0;
         symbolTable = prgrmNode.getSymbolTable();
-        storeStaticData();
-        initEntry();
-        System.out.println(imem);
-        for (Node node : symbolTable.get("main").getFnNode().getBodyNodes()) {
-            node.accept(this);
-            if (node instanceof CallNode) {callSeq();}
-        }
+        // Create the stack frame of main and add it to the callstack.
+        callStack.push(new StackFrame());
+        symbolTable.getFunction("main").accept(this);
+        for (int i=0;i<triplesArray.size();i++) {System.out.println(i+" "+triplesArray.get(i));}
     }
 
-    class StackFrame implements AstVisitor {
+    @Override
+    public void visit(FnNode fnNode) throws Analyzer {
+        frame = callStack.peek();
+        write(Lex.ENTRY,fnNode.getName(),"");
+        for (Node bodyNode : fnNode.getBodyNodes()) {bodyNode.accept(this);}
+    }
 
-        private int[] rmem = new int[8];
-        private int size = 0;
+    @Override
+    public void visit(CallNode callNode) throws Analyzer {
+        write(Lex.CALL,callNode.getName(),callNode.getArgs().size()); advFrame();
+        for (Node argNode : callNode.getArgs()) {argNode.accept(this);}
+        write(Lex.BEGINCALL,callNode.getName(),"");
+        callStack.push(new StackFrame(callNode));
+        symbolTable.getFunction(callNode.getName()).accept(this);
+    }
 
-        public StackFrame() {
-
-        }
+    @Override
+    public void visit(IfNode ifNode) throws Analyzer {
         
     }
 
-    // Debbugging purposes
-    private void printMem(int[] intArray) {
-        StringBuilder b = new StringBuilder();
-        for (int i=0;i<intArray.length;i++) {
-            if (i==0) {b.append("("+intArray[i]+",");}
-            else if (i==intArray.length-1) {b.append(intArray[i]+")\n");}
-            else {b.append(intArray[i]+",");}
+    @Override
+    public void visit(LitNode litNode) {write(Lex.ASSIGN,litNode.getValue(),assignVal());}
+
+    @Override
+    public void visit(IdNode idNode) {
+        // From the symbol table look up the index of the parameter in relation to this id.
+        int dex = symbolTable.getIdIndex(frame.name,idNode.getName());
+        write(Lex.ASSIGN,frame.args.get(dex),assignVal());
+    }
+
+    private void advFrame() {fp=tos;}
+    private int assignVal() {int loc = tos; tos++; return loc;}
+    private void write(Lex op, Object arg1, Object arg2) {triplesArray.add(new Tac(op, arg1, arg2));}
+    private void write(Lex op, Object arg1, Tac arg2) {triplesArray.add(new Tac(op, arg1, arg2));}
+
+    private class StackFrame {
+
+        private String name;
+        private int begin, end;
+        private ArrayList<String> args = new ArrayList<>();
+
+        public StackFrame() {
+            name = "main";
+            for (int i=2;i<Main.arguments.length;i++) {args.add(Main.arguments[i]);}
+            begin=fp; end=tos;
         }
-        System.out.println(b.toString());
+
+        public StackFrame(CallNode callNode) {
+            name = callNode.getName();
+            for (Node arg : callNode.getArgs()) {args.add(arg.getName());}
+            begin=fp; end=tos;
+        }
+
+    }
+
+    private class Tac {
+
+        private Lex op;
+        private String arg1, arg2;
+        private Tac tac;
+
+        public Tac(Lex op, Object arg1, Object arg2) {this.op=op; this.arg1=""+arg1; this.arg2=""+arg2;}
+        public Tac(Lex op, Object arg1, Tac tac) {this.op=op; this.arg1=""+arg1; this.tac=tac;}
+        public Boolean equals(Tac tac) {return (op==tac.op) && (arg1==tac.arg1) && (arg2==tac.arg2);}
+        public String toString() {if (arg2.isEmpty()) {return op+" "+arg1;} return op+" "+arg1+" "+arg2;}
     }
 }
