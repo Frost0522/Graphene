@@ -226,6 +226,15 @@ public class Analyzer extends Throwable {
             case BOOLOPERROR: {
                 throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Integers must not be used in a boolean operations.");
             }
+            case PRIMITIVEBINARY: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Primitive "+node.getName()+" must not be used in binary expressions.");
+            }
+            case PRIMITIVEUNARY: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Primitive "+node.getName()+" must not be used in unary expressions.");
+            }
+            case PRIMITIVEARG: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Primitive "+node.getName()+" must not be passed as an argument.");
+            }
             case NOID: {
                 throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Unassigned "+node.getErrorStr()+", check that the"+
                                    " parameter has been declared.");
@@ -243,11 +252,17 @@ public class Analyzer extends Throwable {
             }
             case TOOFEWARGS: {
                 throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: "+node.getErrorStr().substring(0,1).toUpperCase()+
-                                   node.getErrorStr().substring(1)+" is missing positional arguments.");
+                                   node.getErrorStr().substring(1)+" is missing arguments.");
             }
             case TOOMANYARGS: {
                 throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: "+node.getErrorStr().substring(0,1).toUpperCase()+
-                                   node.getErrorStr().substring(1)+" has too many positional arguments.");
+                                   node.getErrorStr().substring(1)+" has too many arguments.");
+            }
+            case MISSINGMAINARGS: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: The number of arguments given to main is less than the number of parameters declared.");
+            }
+            case EXCESSMAINARGS: {
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: The number of arguments given to main is more than the number of parameters declared.");
             }
             case BADARGTYPE: {
                 throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Function call does not take postional argument "+
@@ -264,13 +279,16 @@ public class Analyzer extends Throwable {
                                    "' has already been declared.");
             }
             case PARAMNAMECONFLICT: {
-                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Parameter '"+node.toString().replace("identifier ","")+
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Parameter '"+node.getName()+
                                    "' has already been declared in this function.");
             }
             case NOTOPERROR: {
                 throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Not operations must be of type boolean.");
             }
             case SIGNANDTYPEMISSMATCH: {
+                if (node.getName().equals("print")) {
+                    throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Primitive 'print' must not be negative.");
+                }
                 if (node.nodeType()==Lex.FNCALL) {
                     throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Function calls of type boolean must not be negative.");
                 }
@@ -288,7 +306,7 @@ public class Analyzer extends Throwable {
 
         // Warning messages
         if (errorType==Lex.UNUSEDFN) {
-            System.err.println("Warning @"+line+":"+column+" -> Function '"+node.toString().replace("identifier ","")+"' is never used.");
+            System.err.println("Warning @"+line+":"+column+" -> Function '"+node.getName()+"' is never used.");
         }
         else if (errorType==Lex.UNUSEDPARAM) {
             System.err.println("Warning @"+line+":"+column+" -> Parameter '"+node.toString().replace("identifier ","")+"' is never used.");
