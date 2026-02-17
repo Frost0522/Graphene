@@ -27,7 +27,25 @@ public enum Lex {
     PRIMITIVEBINARY, PRIMITIVEUNARY, PRIMITIVEARG, MISSINGMAINARGS, EXCESSMAINARGS,
 
     // Opcodes for code generation
-    ASSIGN, CALL, ARG, CONST, BEGINCALL, ENDCALL, ENTRY, EXIT, JMP, LABEL, PARAM, PRINT, EQ, ADD;
+    ASSIGN, 
+    CALL, // call fn name and it's args
+    ENTRY, // signify entry into a fn 
+    EXIT, // signify departure from a fn
+    BEGINCALL, // signify when a frame is referenced 
+    ENDCALL, // signify when a frame is dereferenced
+    BEGINPROLOGUE, // signify beginning of prologue
+    ENDPROLOGUE, // signify ending of prologue
+    BEGINEPILOGUE, // signify beginning of epilogue
+    ENDEPILOGUE, // signify ending of epilogue
+    GOTO, 
+    LABEL,  
+    INS, 
+    COND,
+    PRINT, // output reg's val
+    CONST, // place const into reg
+    SWAP, // swap first mem addr val + fp with the second mem addr val + fp.
+    MOV, // move first mem addr val + fp to the second mem addr val + fp
+    STORE; // place register into memory address at the fp plus second value
 
     @SuppressWarnings("incomplete-switch")
     public int value() {
