@@ -85,8 +85,7 @@ public class SemanticAnalyzer implements AstVisitor {
             fnToParams.put(fnNode.getName(),new ArrayList<>());
             for (Node paramNode : fnNode.getParamNodes()) {
                 paramNode.accept(this); fnToParams.get(fnNode.getName()).add(paramNode.getName());
-            }
-            for (Node bodyNode : fnNode.getBodyNodes()) {bodyNode.accept(this);}
+            } for (Node bodyNode : fnNode.getBodyNodes()) {bodyNode.accept(this);}
         }
 
         @Override
