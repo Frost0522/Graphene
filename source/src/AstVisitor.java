@@ -128,7 +128,10 @@ class LitNode extends Node {
         this.literal = t;
         if (this.literal.getType()==Lex.INTEGERLITERAL) {
             this.value = Integer.valueOf(t.getName()); this.semanticType = Lex.INTEGER;
-        } else {this.semanticType = Lex.BOOLEAN;}
+        } else {
+            this.semanticType = Lex.BOOLEAN;
+            if (t.getName().equals("true")) {value=1;}
+        }
     }
     public String toString() {
         StringBuilder builder = new StringBuilder();
