@@ -5,12 +5,14 @@ import src.SemanticAnalyzer.SymbolTable;
 
 public class CodeGen implements AstVisitor {
 
-    private int insNum=0;
     private FnNode currentFn;
     private CodeGen self = this;
     private SymbolTable symbolTable;
+    private int insNum, labelNum, insOff;
     private ArrayList<Tac> triplesArray = new ArrayList<>();
+    private ArrayList<Integer> labelArray = new ArrayList<>();
     private HashMap<String,StackFrame> stackFrameMap = new HashMap<>();
+    private ArrayList<String> targetArray = new ArrayList<>();
     private StringBuilder targetCode = new StringBuilder();
 
     @Override
@@ -29,6 +31,7 @@ public class CodeGen implements AstVisitor {
         }
         for (int i=0;i<triplesArray.size();i++) {System.out.println(i+" "+triplesArray.get(i));}
         System.out.println(); genTargetCode();
+        for (String code : targetArray) {targetCode.append(code);}
         System.out.println(targetCode);
     }
 
@@ -49,21 +52,62 @@ public class CodeGen implements AstVisitor {
 
     @Override
     public void visit(IfNode ifNode) throws Analyzer {
-        ifNode.accept(this);
+        ifNode.getIf().accept(new CondHandler());
+        // then
+        write(Lex.LEBAL,labelNum-1); labelNum--;
+        // else
     }
 
-    @Override @SuppressWarnings("incomplete-switch")
-    public void visit(BinaryNode binNode) throws Analyzer {
+    class CondHandler implements AstVisitor {
 
-        Lex leftType = binNode.getLeft().nodeType();
-        Lex rightType = binNode.getRight().nodeType();
+        @Override @SuppressWarnings("incomplete-switch")
+        public void visit(BinaryNode binNode) throws Analyzer {
 
-        switch (binNode.nodeType()) {
-            case EQUIVALENT: {
+            Lex rType = binNode.getRight().nodeType();
+            MakeReg reg0 = new MakeReg(0);
+            MakeReg reg1 = new MakeReg(1);
+            binNode.getLeft().accept(reg0);
+            if (rType!=Lex.LITERAL && rType!=Lex.ID) {makeTemp();}
+            binNode.getRight().accept(reg1);
 
-                break;
+            switch (binNode.nodeType()) {
+                case EQUIVALENT: {
+                    if (reg0.isZero) {
+                        write(Lex.EQUIVALENT,1);
+                    }
+                    else if (reg1.isZero) {
+                        write(Lex.LABEL,labelNum); labelNum++;
+                        write(Lex.EQUIVALENT,0);
+                    }
+                    else {
+                        write(Lex.MINUS,0,1); 
+                        write(Lex.EQUIVALENT,0);
+                    }
+                    break;
+                }
             }
         }
+    }
+
+    class MakeReg implements AstVisitor {
+
+        private int loc;
+        private Boolean isZero = false;
+
+        public MakeReg(int loc) {this.loc=loc;}
+
+        @Override
+        public void visit(IdNode idNode) {
+            int dex = stackFrameMap.get(currentFn.getName()).getParamIndex(idNode.getName());
+            write(Lex.LOAD,loc,dex);
+        }
+
+        @Override
+        public void visit(LitNode litNode) {
+            if (litNode.getName().equals("0")) {isZero=true;}
+            else {write(Lex.CONST,litNode.getName(),loc);}
+        }
+
     }
 
     // If a function contains a function call it is essentially that function.
@@ -126,38 +170,54 @@ public class CodeGen implements AstVisitor {
 
     @SuppressWarnings("incomplete-switch")
     private void genTargetCode() {
+        Tac prev = new Tac();
         for (Tac tac : triplesArray) {
             switch (tac.op) {
-                case ENTRY: {targetCode.append("* "+tac.arg1+"\n"); break;}
-                case BEGINPROLOGUE: {targetCode.append("* prologue\n"); break;}
-                case ENDPROLOGUE: {targetCode.append("\n"); break;}
+                case ENTRY: {
+                    targetArray.add("* "+tac.arg1+"\n"); insOff++;
+                    stackFrameMap.get(tac.arg1).ins = insNum;
+                    break;
+                }
+                case BEGINPROLOGUE: {targetArray.add("* prologue\n"); insOff++; break;}
+                case ENDPROLOGUE: {targetArray.add("\n"); break;}
                 case CALL: {break;}
                 case ASSIGN: {break;}
-                case CONST: {targetCode.append(insNum+": LDC "+tac.arg2+","+tac.arg1+"(0)\n"); insNum++; break;}
+                case CONST: {targetArray.add(insNum+": LDC "+tac.arg2+","+tac.arg1+"(0)\n"); insNum++; break;}
                 case IF: {break;}
-                case EQUIVALENT: {break;}
+                case EQUIVALENT: {
+                    if (prev.op==Lex.LABEL) {
+                        targetArray.add(insNum+": JEQ "+tac.arg1+",*(4)\n");
+                    } insNum++; break;
+                }
                 case GOTO: {break;}
-                case COND: {break;}
-                case LABEL: {break;}
+                case LABEL: {labelArray.add(insNum); break;}
+                case LEBAL: {
+                    int dex = labelArray.removeLast()+insOff;
+                    String targetStr = targetArray.get(dex);
+                    targetArray.set(dex,targetStr.replace("*",insNum+""));
+                    break;
+                }
                 case PLUS: {break;}
                 case EXIT: {break;}
                 case MINUS: {break;}
-                case STORE: {targetCode.append(insNum+": ST "+tac.arg1+","+tac.arg2+"(5)\n"); insNum++; break;}
+                case LOAD: {targetArray.add(insNum+": LD "+tac.arg1+","+tac.arg2+"(5)\n"); insNum++; break;}
+                case STORE: {targetArray.add(insNum+": ST "+tac.arg1+","+tac.arg2+"(5)\n"); insNum++; break;}
+                case TEMP: {break;}
                 case MOV: {
-                    targetCode.append(
+                    targetArray.add(
                         insNum+": LD 0,"+tac.arg1+"(5)\n"+
                         (insNum+1)+": ST 0,"+tac.arg2+"(5)\n"
                     ); insNum+=2; break;
                 }
                 case SWAP: {
-                    targetCode.append(
+                    targetArray.add(
                         insNum+": LD 0,"+tac.arg1+"(5)\n"+
                         (insNum+1)+": LD 1,"+tac.arg2+"(5)\n"+
                         (insNum+2)+": ST 0,"+tac.arg2+"(5)\n"+
                         (insNum+3)+": ST 1,"+tac.arg1+"(5)\n"
                     ); insNum+=4; break;
                 }
-            }
+            } prev=tac;
         }
     }
 
@@ -168,13 +228,14 @@ public class CodeGen implements AstVisitor {
 
         public Tac(Lex op, Object arg1, Object arg2) {this.op=op; this.arg1=arg1+""; this.arg2=arg2+"";}
         public Tac(Lex op, Object arg1) {this.op=op; this.arg1=arg1+"";}
+        public Tac() {}
         public String toString() {if (arg2!=null) {return op+" "+arg1+" "+arg2;} return op+" "+arg1;}
     }
 
     private class StackFrame {
 
         private String name;
-        private int size;
+        private int size, temp=0, ins;
         private ArrayList<Node> paramNodes;
 
         public StackFrame() {paramNodes = new ArrayList<>();}
@@ -184,4 +245,8 @@ public class CodeGen implements AstVisitor {
 
     private void write(Lex op, Object arg1, Object arg2) {triplesArray.add(new Tac(op, arg1, arg2));}
     private void write(Lex op, Object arg1) {triplesArray.add(new Tac(op, arg1));}
+    private void makeTemp() {
+        StackFrame frame = stackFrameMap.get(currentFn.getName()); 
+        write(Lex.TEMP,0,6+frame.temp); frame.temp++;
+    }
 }
