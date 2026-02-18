@@ -38,13 +38,15 @@ public enum Lex {
     BEGINEPILOGUE, // signify beginning of epilogue
     ENDEPILOGUE, // signify ending of epilogue
     GOTO, 
-    LABEL,  
-    INS, 
-    COND,
+    LABEL,
+    LEBAL,
+    INS,
     PRINT, // output reg's val
     CONST, // place const into reg
+    LOAD, // place mem addr val + fp into reg at second val
     SWAP, // swap first mem addr val + fp with the second mem addr val + fp.
     MOV, // move first mem addr val + fp to the second mem addr val + fp
+    TEMP, // place reg into mem addr at the tos + second val
     STORE; // place register into memory address at the fp plus second value
 
     @SuppressWarnings("incomplete-switch")
