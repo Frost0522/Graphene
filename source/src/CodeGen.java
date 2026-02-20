@@ -1,7 +1,7 @@
 package src;
 import java.util.ArrayList;
 import java.util.HashMap;
-import src.SemanticAnalyzer.SymbolTable;
+import src.SemanticAnalyzer.*;
 
 public class CodeGen implements AstVisitor {
 
@@ -11,14 +11,15 @@ public class CodeGen implements AstVisitor {
     private int insNum, labelNum, insOff;
     private ArrayList<Tac> triplesArray = new ArrayList<>();
     private ArrayList<Integer> labelArray = new ArrayList<>();
-    private HashMap<String,StackFrame> stackFrameMap = new HashMap<>();
+    private HashMap<String,StackFrame> stackFrameMap;
     private ArrayList<String> targetArray = new ArrayList<>();
     private StringBuilder targetCode = new StringBuilder();
 
     @Override
     public void visit(PrgrmNode prgrmNode) throws Analyzer {
-        symbolTable=prgrmNode.getSymbolTable(); write(Lex.BEGINPROLOGUE,"");
-        for (Node fnNode : prgrmNode.getFunctions()) {new GenStackFrames(fnNode);}
+        symbolTable = prgrmNode.getSymbolTable();
+        stackFrameMap = symbolTable.getStackFrames();
+        write(Lex.BEGINPROLOGUE,"");
         FnNode main = symbolTable.getFunction("main"); currentFn = main;
         write(Lex.CONST,1,5); /* set fp */
         for (Node bodyNode : main.getBodyNodes()) {
@@ -29,6 +30,7 @@ public class CodeGen implements AstVisitor {
                 write(Lex.ENDPROLOGUE,""); main.accept(this);
             }
         }
+        
         for (int i=0;i<triplesArray.size();i++) {System.out.println(i+" "+triplesArray.get(i));}
         System.out.println(); genTargetCode();
         for (String code : targetArray) {targetCode.append(code);}
@@ -175,29 +177,16 @@ public class CodeGen implements AstVisitor {
         }
     }
 
-    class GenStackFrames implements AstVisitor {
-
-        public GenStackFrames(Node fnNode) throws Analyzer {fnNode.accept(this);}
-
-        @Override
-        public void visit(FnNode fnNode) throws Analyzer {
-            StackFrame frame = new StackFrame(); frame.name = fnNode.getName();
-            frame.size = fnNode.getParamNodes().size()+1;
-            frame.paramNodes = fnNode.getParamNodes();
-            stackFrameMap.put(fnNode.getName(),frame);
-        }
-    }
-
     @SuppressWarnings("incomplete-switch")
     private void genTargetCode() {
         Tac prev = new Tac();
-        String currentFnName = "";
+        String fnName = "main", prevFnName = "";
         for (Tac tac : triplesArray) {
             switch (tac.op) {
                 case ENTRY: {
                     targetArray.add("* "+tac.arg1+"\n"); insOff++;
-                    stackFrameMap.get(tac.arg1).ins = insNum;
-                    currentFnName = tac.arg1;
+                    stackFrameMap.get(tac.arg1).setIns(insNum);
+                    prevFnName = fnName; fnName = tac.arg1;
                     break;
                 }
                 case BEGINPROLOGUE: {targetArray.add("* prologue\n"); insOff++; break;}
@@ -240,16 +229,17 @@ public class CodeGen implements AstVisitor {
                     ); insNum+=4; break;
                 }
                 case RETURN: {
+                    
                     targetArray.add(
                         insNum+": LDA 1,-1(5)\n"+
                         (insNum+1)+": JNE 1,"+(insNum+3)+"(4)\n"+
                         (insNum+2)+": LDA, 7,*(4)\n"+
                         (insNum+3)+": ST 0,0(5)\n"+
-                        (insNum+4)+": LDA 6,-1(6)\n"+
+                        (insNum+4)+": LDA 6,0(5)\n"+
                         (insNum+5)+": LDA 5,-1(5)\n"+
                         // to-do: The code below will not always work for the instruction number given.
                         // Further investigation will be needed..
-                        (insNum+6)+": LDA 7,"+stackFrameMap.get(currentFnName).ins+"(4)\n"
+                        (insNum+6)+": LDA 7,"+stackFrameMap.get(fnName).getIns()+"(4)\n"
                     ); insNum+=7; break;
                 }
             } prev=tac;
@@ -267,21 +257,10 @@ public class CodeGen implements AstVisitor {
         public String toString() {if (arg2!=null) {return op+" "+arg1+" "+arg2;} return op+" "+arg1;}
     }
 
-    private class StackFrame {
-
-        private String name;
-        private int size, temp=0, ins;
-        private ArrayList<Node> paramNodes;
-
-        public StackFrame() {paramNodes = new ArrayList<>();}
-
-        public int getParamIndex(String idName) {return symbolTable.getIdIndex(name,idName);}
-    }
-
     private void write(Lex op, Object arg1, Object arg2) {triplesArray.add(new Tac(op, arg1, arg2));}
     private void write(Lex op, Object arg1) {triplesArray.add(new Tac(op, arg1));}
     private void makeTemp() {
         StackFrame frame = stackFrameMap.get(currentFn.getName()); 
-        write(Lex.TEMP,0,6+frame.temp); frame.temp++;
+        write(Lex.TEMP,0,6+frame.getTemp()); frame.incTemp();
     }
 }
