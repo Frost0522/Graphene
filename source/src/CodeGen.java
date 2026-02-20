@@ -53,9 +53,29 @@ public class CodeGen implements AstVisitor {
     @Override
     public void visit(IfNode ifNode) throws Analyzer {
         ifNode.getIf().accept(new CondHandler());
-        // then
+        ifNode.getThen().accept(this);
+        if (!ifNode.getThen().isRecursive()) {write(Lex.RETURN,"");}
         write(Lex.LEBAL,labelNum-1); labelNum--;
         // else
+    }
+
+    @Override @SuppressWarnings("incomplete-switch")
+    public void visit(BinaryNode binNode) throws Analyzer {
+
+        Lex rType = binNode.getRight().nodeType();
+        MakeReg reg0 = new MakeReg(0);
+        MakeReg reg1 = new MakeReg(1);
+
+        binNode.getLeft().accept(reg0);
+        if (rType!=Lex.LITERAL && rType!=Lex.ID) {
+            makeTemp(); binNode.getRight().accept(this);
+            // to-do: add LDA IR to swap register 0 over to register 1,
+            // then load the temporary value into register 0.
+        } else {binNode.getRight().accept(reg1);}
+
+        switch (binNode.nodeType()) {
+            case PLUS: {write(Lex.PLUS,0,1); break;}
+        }
     }
 
     class CondHandler implements AstVisitor {
@@ -67,8 +87,9 @@ public class CodeGen implements AstVisitor {
             MakeReg reg0 = new MakeReg(0);
             MakeReg reg1 = new MakeReg(1);
             binNode.getLeft().accept(reg0);
-            if (rType!=Lex.LITERAL && rType!=Lex.ID) {makeTemp();}
-            binNode.getRight().accept(reg1);
+            if (rType!=Lex.LITERAL && rType!=Lex.ID) {
+                makeTemp(); binNode.getRight().accept(self);
+            } else {binNode.getRight().accept(reg1);}
 
             switch (binNode.nodeType()) {
                 case EQUIVALENT: {
@@ -107,7 +128,6 @@ public class CodeGen implements AstVisitor {
             if (litNode.getName().equals("0")) {isZero=true;}
             else {write(Lex.CONST,litNode.getName(),loc);}
         }
-
     }
 
     // If a function contains a function call it is essentially that function.
@@ -171,11 +191,13 @@ public class CodeGen implements AstVisitor {
     @SuppressWarnings("incomplete-switch")
     private void genTargetCode() {
         Tac prev = new Tac();
+        String currentFnName = "";
         for (Tac tac : triplesArray) {
             switch (tac.op) {
                 case ENTRY: {
                     targetArray.add("* "+tac.arg1+"\n"); insOff++;
                     stackFrameMap.get(tac.arg1).ins = insNum;
+                    currentFnName = tac.arg1;
                     break;
                 }
                 case BEGINPROLOGUE: {targetArray.add("* prologue\n"); insOff++; break;}
@@ -197,7 +219,7 @@ public class CodeGen implements AstVisitor {
                     targetArray.set(dex,targetStr.replace("*",insNum+""));
                     break;
                 }
-                case PLUS: {break;}
+                case PLUS: {targetArray.add(insNum+": ADD 0,"+tac.arg1+","+tac.arg2+"\n"); insNum++; break;}
                 case EXIT: {break;}
                 case MINUS: {break;}
                 case LOAD: {targetArray.add(insNum+": LD "+tac.arg1+","+tac.arg2+"(5)\n"); insNum++; break;}
@@ -216,6 +238,19 @@ public class CodeGen implements AstVisitor {
                         (insNum+2)+": ST 0,"+tac.arg2+"(5)\n"+
                         (insNum+3)+": ST 1,"+tac.arg1+"(5)\n"
                     ); insNum+=4; break;
+                }
+                case RETURN: {
+                    targetArray.add(
+                        insNum+": LDA 1,-1(5)\n"+
+                        (insNum+1)+": JNE 1,"+(insNum+3)+"(4)\n"+
+                        (insNum+2)+": LDA, 7,*(4)\n"+
+                        (insNum+3)+": ST 0,0(5)\n"+
+                        (insNum+4)+": LDA 6,-1(6)\n"+
+                        (insNum+5)+": LDA 5,-1(5)\n"+
+                        // to-do: The code below will not always work for the instruction number given.
+                        // Further investigation will be needed..
+                        (insNum+6)+": LDA 7,"+stackFrameMap.get(currentFnName).ins+"(4)\n"
+                    ); insNum+=7; break;
                 }
             } prev=tac;
         }
