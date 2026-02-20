@@ -58,6 +58,7 @@ public class SemanticAnalyzer implements AstVisitor {
 
         private HashMap<String,ParamNode> allCurrentParams;
         private HashMap<String,ArrayList<String>> fnToParams = new HashMap<>();
+        private String currentFnName;
 
         public SymbolTable(Node node) throws Analyzer {node.accept(this);}
         
@@ -69,6 +70,8 @@ public class SemanticAnalyzer implements AstVisitor {
         public void visit(PrgrmNode prgrmNode) throws Analyzer {
             for (Node node : prgrmNode.getFunctions()) {
                 allCurrentParams = new HashMap<>(); node.accept(this);
+                // Set program node to recursive if function node is recursive.
+                if (node.isRecursive()) {prgrmNode.setRecursive();}
             }
             // Confirm that the function return type matches semantic type of body.
             for (FnNode fnNode : allFunctions.values()) {
@@ -82,10 +85,14 @@ public class SemanticAnalyzer implements AstVisitor {
 
         @Override
         public void visit(FnNode fnNode) throws Analyzer {
-            fnToParams.put(fnNode.getName(),new ArrayList<>());
+            currentFnName = fnNode.getName(); fnToParams.put(fnNode.getName(),new ArrayList<>());
             for (Node paramNode : fnNode.getParamNodes()) {
                 paramNode.accept(this); fnToParams.get(fnNode.getName()).add(paramNode.getName());
-            } for (Node bodyNode : fnNode.getBodyNodes()) {bodyNode.accept(this);}
+            } for (Node bodyNode : fnNode.getBodyNodes()) {
+                bodyNode.accept(this);
+                // Set function node to recursive if body node is recursive.
+                if (bodyNode.isRecursive()) {fnNode.setRecursive();}
+            }
         }
 
         @Override
@@ -99,6 +106,8 @@ public class SemanticAnalyzer implements AstVisitor {
         public void visit(CallNode callNode) throws Analyzer {
             // If not print, set the call node's semantic type to that of it's declared function return type.
             if (!callNode.getName().equals("print")) {
+                // Set call node to recursive if the function it is being called from has the same name.
+                if (currentFnName.equals(callNode.getName())) {callNode.setRecursive();}
                 // Check that the function has been declared.
                 if (!allFunctions.containsKey(callNode.getName())) {new Analyzer(Lex.NOFNCALL,callNode);} 
                 callNode.setSemanticType(allFunctions.get(callNode.getName()).getReturnType().getSemanticType());
@@ -163,11 +172,16 @@ public class SemanticAnalyzer implements AstVisitor {
                     binNode.setSemanticType(Lex.BOOLEAN); break;
                 } case EQUIVALENT: {binNode.setSemanticType(Lex.BOOLEAN); break;}
             }
+
+            // Set binary node to recursive if either child is recursive.
+            if (binNode.getLeft().isRecursive()||binNode.getRight().isRecursive()) {binNode.setRecursive();}
         }
 
         @Override
         public void visit(NotNode notNode) throws Analyzer {
             notNode.getNode().accept(this);
+            // Set not node to recursive if inner node is recursive.
+            if (notNode.getNode().isRecursive()) {notNode.setRecursive();}
             // Check to see that primitive print is not being negated.
             if (notNode.getName().equals("print")) {new Analyzer(Lex.PRIMITIVEUNARY,notNode.getNode());}
             // Verify the node being negated is of semantic type boolean.
@@ -185,11 +199,16 @@ public class SemanticAnalyzer implements AstVisitor {
             if (ifNode.getThen().getSemanticType()==ifNode.getElse().getSemanticType()) {
                 ifNode.setSemanticType(ifNode.getThen().getSemanticType());
             } else {new Analyzer(Lex.DIFFCLAUSES,ifNode.getThen());}
+            // Set if node to recursive if the condition, then, or else clauses are recursive.
+            if (ifNode.getIf().isRecursive()||ifNode.getThen().isRecursive()||
+                ifNode.getElse().isRecursive()) {ifNode.setRecursive();}
         }
 
         @Override
         public void visit(ExpNode expNode) throws Analyzer {
             expNode.getNode().accept(this);
+            // Set expression node to recursive if inner node is recursive.
+            if (expNode.getNode().isRecursive()) {expNode.setRecursive();}
             // Verify primitive print is not being used in expressions.
             if (expNode.getName().equals("print")) {new Analyzer(Lex.PRIMITIVEUNARY,expNode);}
             expNode.setSemanticType(expNode.getNode().getSemanticType());
