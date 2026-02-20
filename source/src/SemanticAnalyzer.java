@@ -1,10 +1,11 @@
 package src;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class SemanticAnalyzer implements AstVisitor {
 
     private HashMap<String,FnNode> allFunctions = new HashMap<>();
+    private HashMap<String,StackFrame> stackFrameMap = new HashMap<>();
     SymbolTable symbolTable;
 
     @Override
@@ -13,7 +14,7 @@ public class SemanticAnalyzer implements AstVisitor {
         prgrmNode.setSymbolTable(symbolTable);
     }
 
-    class VisitAllFunctions implements AstVisitor {
+    private class VisitAllFunctions implements AstVisitor {
 
         @Override
         public void visit(PrgrmNode prgrmNode) throws Analyzer {
@@ -32,6 +33,10 @@ public class SemanticAnalyzer implements AstVisitor {
 
         @Override
         public void visit(FnNode fnNode) throws Analyzer {
+            // Creation of stack frames.
+            StackFrame frame = new StackFrame(); frame.name = fnNode.getName();
+            frame.size = fnNode.getParamNodes().size()+1;
+            stackFrameMap.put(fnNode.getName(),frame);
             // Confirm function has not already been declared.
             if (allFunctions.containsKey(fnNode.getName())) {new Analyzer(Lex.FNNAMECONFLICT,fnNode.getIdNode());}
             // Check for functions named after primitive function calls.
@@ -54,17 +59,47 @@ public class SemanticAnalyzer implements AstVisitor {
         public void visit(TypeNode typeNode) {typeNode.setSemanticType(typeNode.getType());}
     }
 
-    class SymbolTable implements AstVisitor {
+    public class StackFrame {
+
+        private String name;
+        private int size, temp, ins;
+        private HashSet<String> callers = new HashSet<>(), callees = new HashSet<>();
+
+        public StackFrame() {}
+
+        public int size() {return size;}
+        public int getTemp() {return temp;}
+        public void incTemp() {temp++;}
+        public void decTemp() {if (temp!=0) {temp--;}}
+        public void setIns(Integer val) {ins=val;}
+        public int getIns() {return ins;}
+        public HashSet<String> callers() {return callers;}
+        public HashSet<String> callees() {return callees;}
+        public int getParamIndex(String idName) {
+            for (int i=0;i<allFunctions.get(name).getParamNodes().size();i++) {
+                if (allFunctions.get(name).getParamNodes().get(i).getName().equals(idName)) {
+                    return i;
+                }
+            } return -1;
+        }
+    }
+
+    public class SymbolTable implements AstVisitor {
 
         private HashMap<String,ParamNode> allCurrentParams;
-        private HashMap<String,ArrayList<String>> fnToParams = new HashMap<>();
-        private String currentFnName;
+        private StackFrame frame = new StackFrame();
 
         public SymbolTable(Node node) throws Analyzer {node.accept(this);}
         
-        public String toString() {/* to-do */ return "";}
+        public HashMap<String,StackFrame> getStackFrames() {return stackFrameMap;}
         public FnNode getFunction(String name) {return allFunctions.get(name);}
-        public int getIdIndex(String fnName, String idName) {return fnToParams.get(fnName).indexOf(idName);}
+        public String toString() {
+            String output = "";
+            for (StackFrame frame : stackFrameMap.values()) {
+                output+="Function: "+frame.name+"\n"+
+                "Callees: "+frame.callees+"\nCallers: "+frame.callers+"\n\n";
+            } return output.trim();
+        }
 
         @Override
         public void visit(PrgrmNode prgrmNode) throws Analyzer {
@@ -85,9 +120,9 @@ public class SemanticAnalyzer implements AstVisitor {
 
         @Override
         public void visit(FnNode fnNode) throws Analyzer {
-            currentFnName = fnNode.getName(); fnToParams.put(fnNode.getName(),new ArrayList<>());
+            frame = stackFrameMap.get(fnNode.getName());
             for (Node paramNode : fnNode.getParamNodes()) {
-                paramNode.accept(this); fnToParams.get(fnNode.getName()).add(paramNode.getName());
+                paramNode.accept(this);
             } for (Node bodyNode : fnNode.getBodyNodes()) {
                 bodyNode.accept(this);
                 // Set function node to recursive if body node is recursive.
@@ -104,10 +139,14 @@ public class SemanticAnalyzer implements AstVisitor {
 
         @Override
         public void visit(CallNode callNode) throws Analyzer {
+            // Add callee to current frame.
+            frame.callees.add(callNode.getName());
             // If not print, set the call node's semantic type to that of it's declared function return type.
             if (!callNode.getName().equals("print")) {
+                // Add calling frame as caller to the callee.
+                stackFrameMap.get(callNode.getName()).callers.add(frame.name);
                 // Set call node to recursive if the function it is being called from has the same name.
-                if (currentFnName.equals(callNode.getName())) {callNode.setRecursive();}
+                if (frame.name.equals(callNode.getName())) {callNode.setRecursive();}
                 // Check that the function has been declared.
                 if (!allFunctions.containsKey(callNode.getName())) {new Analyzer(Lex.NOFNCALL,callNode);} 
                 callNode.setSemanticType(allFunctions.get(callNode.getName()).getReturnType().getSemanticType());
