@@ -6,7 +6,7 @@ public class SemanticAnalyzer implements AstVisitor {
 
     private HashMap<String,FnNode> allFunctions = new HashMap<>();
     private HashMap<String,StackFrame> stackFrameMap = new HashMap<>();
-    SymbolTable symbolTable;
+    private SymbolTable symbolTable;
 
     @Override
     public void visit(PrgrmNode prgrmNode) throws Analyzer {
@@ -35,7 +35,7 @@ public class SemanticAnalyzer implements AstVisitor {
         public void visit(FnNode fnNode) throws Analyzer {
             // Creation of stack frames.
             StackFrame frame = new StackFrame(); frame.name = fnNode.getName();
-            frame.size = fnNode.getParamNodes().size()+1;
+            frame.size = fnNode.getParamNodes().size()+2;
             stackFrameMap.put(fnNode.getName(),frame);
             // Confirm function has not already been declared.
             if (allFunctions.containsKey(fnNode.getName())) {new Analyzer(Lex.FNNAMECONFLICT,fnNode.getIdNode());}
@@ -65,14 +65,13 @@ public class SemanticAnalyzer implements AstVisitor {
         private int size, temp, ins;
         private HashSet<String> callers = new HashSet<>(), callees = new HashSet<>();
 
-        public StackFrame() {}
-
         public int size() {return size;}
         public int getTemp() {return temp;}
         public void incTemp() {temp++;}
         public void decTemp() {if (temp!=0) {temp--;}}
-        public void setIns(Integer val) {ins=val;}
+        public int getRtrnAddr() {return size-2;}
         public int getIns() {return ins;}
+        public void setIns(Integer val) {ins=val;}
         public HashSet<String> callers() {return callers;}
         public HashSet<String> callees() {return callees;}
         public int getParamIndex(String idName) {
