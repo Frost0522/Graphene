@@ -1,7 +1,8 @@
 package src;
 import java.util.ArrayList;
 import java.util.HashMap;
-import src.SemanticAnalyzer.*;
+import src.SemanticAnalyzer.SymbolTable;
+import src.SemanticAnalyzer.StackFrame;
 
 public class CodeGen implements AstVisitor {
 
@@ -144,7 +145,9 @@ public class CodeGen implements AstVisitor {
         public void visit(CallNode callNode) throws Analyzer {
             ArrayList<Node> params = currentFn.getParamNodes();
             ArrayList<Node> args = callNode.getArgs();
-            write(Lex.CONST,args.size()+1,6); /* set tos */
+            // store fp to this frame's return address location
+            write(Lex.STORE,5,stackFrameMap.get(callNode.getName()).getRtrnAddr());
+            write(Lex.CONST,stackFrameMap.get(callNode.getName()).size(),6); /* set tos */
             Boolean allLiterals = true;
             for (Node arg : args) {if (arg.nodeType()!=Lex.LITERAL) {allLiterals = false; break;}}
             if (allLiterals) {for (int i=0;i<args.size();i++) {literals.add(i);}}
@@ -181,13 +184,14 @@ public class CodeGen implements AstVisitor {
     private void genTargetCode() {
         Tac prev = new Tac();
         String fnName = "main", prevFnName = "";
+        StackFrame frame = stackFrameMap.get("main");
         for (Tac tac : triplesArray) {
             switch (tac.op) {
                 case ENTRY: {
                     targetArray.add("* "+tac.arg1+"\n"); insOff++;
                     stackFrameMap.get(tac.arg1).setIns(insNum);
-                    prevFnName = fnName; fnName = tac.arg1;
-                    break;
+                    if (!tac.arg1.equals("main")) {prevFnName = fnName; fnName = tac.arg1;}
+                    frame = stackFrameMap.get(fnName); break;
                 }
                 case BEGINPROLOGUE: {targetArray.add("* prologue\n"); insOff++; break;}
                 case ENDPROLOGUE: {targetArray.add("\n"); break;}
@@ -197,7 +201,7 @@ public class CodeGen implements AstVisitor {
                 case IF: {break;}
                 case EQUIVALENT: {
                     if (prev.op==Lex.LABEL) {
-                        targetArray.add(insNum+": JEQ "+tac.arg1+",*(4)\n");
+                        targetArray.add(insNum+": JNE "+tac.arg1+",*(4)\n");
                     } insNum++; break;
                 }
                 case GOTO: {break;}
@@ -229,18 +233,16 @@ public class CodeGen implements AstVisitor {
                     ); insNum+=4; break;
                 }
                 case RETURN: {
-                    
                     targetArray.add(
-                        insNum+": LDA 1,-1(5)\n"+
-                        (insNum+1)+": JNE 1,"+(insNum+3)+"(4)\n"+
-                        (insNum+2)+": LDA, 7,*(4)\n"+
-                        (insNum+3)+": ST 0,0(5)\n"+
-                        (insNum+4)+": LDA 6,0(5)\n"+
-                        (insNum+5)+": LDA 5,-1(5)\n"+
-                        // to-do: The code below will not always work for the instruction number given.
-                        // Further investigation will be needed..
-                        (insNum+6)+": LDA 7,"+stackFrameMap.get(fnName).getIns()+"(4)\n"
-                    ); insNum+=7; break;
+                        insNum+": LD 1,"+frame.getRtrnAddr()+"(5)\n"+
+                        (insNum+1)+": SUB 1,1,5\n"+
+                        (insNum+2)+": JNE 1,"+(insNum+4)+"(4)\n"+
+                        (insNum+3)+": LDA, 7,*(4)\n"+
+                        (insNum+4)+": ST 0,0(5)\n"+
+                        (insNum+5)+": LDA 6,0(5)\n"+
+                        (insNum+6)+": LDA 5,-1(5)\n"+
+                        (insNum+7)+": LDA 7,"+stackFrameMap.get(fnName).getIns()+"(4)\n"
+                    ); insNum+=8; break;
                 }
             } prev=tac;
         }
