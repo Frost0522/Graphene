@@ -59,7 +59,7 @@ public class CodeGen implements AstVisitor {
         ifNode.getThen().accept(this);
         if (!ifNode.getThen().isRecursive()) {write(Lex.RETURN,"");}
         write(Lex.LEBAL,labelNum-1); labelNum--;
-        // else
+        ifNode.getElse().accept(this);
     }
 
     @Override @SuppressWarnings("incomplete-switch")
@@ -79,6 +79,8 @@ public class CodeGen implements AstVisitor {
         switch (binNode.nodeType()) {
             case PLUS: {write(Lex.PLUS,0,1); break;}
         }
+
+        if (!currentFn.getName().equals("main")) {write(Lex.ENDCALL,"");}
     }
 
     class CondHandler implements AstVisitor {
@@ -106,8 +108,7 @@ public class CodeGen implements AstVisitor {
                     else {
                         write(Lex.MINUS,0,1); 
                         write(Lex.EQUIVALENT,0);
-                    }
-                    break;
+                    } break;
                 }
             }
         }
@@ -145,9 +146,11 @@ public class CodeGen implements AstVisitor {
         public void visit(CallNode callNode) throws Analyzer {
             ArrayList<Node> params = currentFn.getParamNodes();
             ArrayList<Node> args = callNode.getArgs();
-            // store fp to this frame's return address location
-            write(Lex.STORE,5,stackFrameMap.get(callNode.getName()).getRtrnAddr());
+            // store fp to this frame's control link
+            write(Lex.STORE,5,stackFrameMap.get(callNode.getName()).getConLink());
             write(Lex.CONST,stackFrameMap.get(callNode.getName()).size(),6); /* set tos */
+            write(Lex.BEGINCALL,"");
+            write(Lex.CALL,callNode.getName(),callNode.getArgs().size());
             Boolean allLiterals = true;
             for (Node arg : args) {if (arg.nodeType()!=Lex.LITERAL) {allLiterals = false; break;}}
             if (allLiterals) {for (int i=0;i<args.size();i++) {literals.add(i);}}
@@ -182,25 +185,27 @@ public class CodeGen implements AstVisitor {
 
     @SuppressWarnings("incomplete-switch")
     private void genTargetCode() {
-        Tac prev = new Tac();
-        String fnName = "main", prevFnName = "";
-        StackFrame frame = stackFrameMap.get("main");
+        Tac prevTac = new Tac();
+        String actName="", prevActName="", lastLoadedParam="";
+        StackFrame frame = stackFrameMap.get("main"), prevFrame = frame;
         for (Tac tac : triplesArray) {
             switch (tac.op) {
                 case ENTRY: {
                     targetArray.add("* "+tac.arg1+"\n"); insOff++;
                     stackFrameMap.get(tac.arg1).setIns(insNum);
-                    if (!tac.arg1.equals("main")) {prevFnName = fnName; fnName = tac.arg1;}
-                    frame = stackFrameMap.get(fnName); break;
+                    frame=stackFrameMap.get(actName); break;
                 }
                 case BEGINPROLOGUE: {targetArray.add("* prologue\n"); insOff++; break;}
-                case ENDPROLOGUE: {targetArray.add("\n"); break;}
-                case CALL: {break;}
+                case ENDPROLOGUE: {targetArray.add("\n"); if (!actName.isBlank()) {prevFrame=null;} break;}
+                case CALL: {
+                    if (actName.isBlank()) {actName = tac.arg1+"";}
+                    else {prevActName=actName; actName=tac.arg1+"";} break;
+                }
                 case ASSIGN: {break;}
                 case CONST: {targetArray.add(insNum+": LDC "+tac.arg2+","+tac.arg1+"(0)\n"); insNum++; break;}
                 case IF: {break;}
                 case EQUIVALENT: {
-                    if (prev.op==Lex.LABEL) {
+                    if (prevTac.op==Lex.LABEL) {
                         targetArray.add(insNum+": JNE "+tac.arg1+",*(4)\n");
                     } insNum++; break;
                 }
@@ -215,7 +220,11 @@ public class CodeGen implements AstVisitor {
                 case PLUS: {targetArray.add(insNum+": ADD 0,"+tac.arg1+","+tac.arg2+"\n"); insNum++; break;}
                 case EXIT: {break;}
                 case MINUS: {break;}
-                case LOAD: {targetArray.add(insNum+": LD "+tac.arg1+","+tac.arg2+"(5)\n"); insNum++; break;}
+                case LOAD: {
+                    targetArray.add(insNum+": LD "+tac.arg1+","+tac.arg2+"(5)\n"); insNum++;
+                    String param = frame.getParam((int)tac.arg2);
+                    if (!param.isBlank()) {lastLoadedParam=param;} break;
+                }
                 case STORE: {targetArray.add(insNum+": ST "+tac.arg1+","+tac.arg2+"(5)\n"); insNum++; break;}
                 case TEMP: {break;}
                 case MOV: {
@@ -234,27 +243,31 @@ public class CodeGen implements AstVisitor {
                 }
                 case RETURN: {
                     targetArray.add(
-                        insNum+": LD 1,"+frame.getRtrnAddr()+"(5)\n"+
-                        (insNum+1)+": SUB 1,1,5\n"+
-                        (insNum+2)+": JNE 1,"+(insNum+4)+"(4)\n"+
-                        (insNum+3)+": LDA, 7,*(4)\n"+
-                        (insNum+4)+": ST 0,0(5)\n"+
-                        (insNum+5)+": LDA 6,0(5)\n"+
-                        (insNum+6)+": LDA 5,-1(5)\n"+
-                        (insNum+7)+": LDA 7,"+stackFrameMap.get(fnName).getIns()+"(4)\n"
-                    ); insNum+=8; break;
+                        insNum+": LD 1,"+frame.getConLink()+"(5)\n"+
+                        (insNum+1)+": SUB 2,1,5\n"+
+                        (insNum+2)+": JNE 2,"+(insNum+4)+"(4)\n"+
+                        (insNum+3)+": LDA, 7,*(4)\n"
+                    );
+                    if (prevFrame==null) {
+                        targetArray.add(
+                            (insNum+4)+": LDA 6,0(5)\n"+
+                            (insNum+5)+": LDA 5,0(1)\n"+
+                            (insNum+6)+": ST 0,"+frame.getParamIndex(lastLoadedParam)+"(5)\n"+
+                            (insNum+7)+": LDA 7,"+stackFrameMap.get(actName).getIns()+"(4)\n"
+                        );
+                    } insNum+=8; break;
                 }
-            } prev=tac;
+            } prevTac=tac;
         }
     }
 
     private class Tac {
 
         private Lex op;
-        private String arg1, arg2;
+        private Object arg1, arg2;
 
-        public Tac(Lex op, Object arg1, Object arg2) {this.op=op; this.arg1=arg1+""; this.arg2=arg2+"";}
-        public Tac(Lex op, Object arg1) {this.op=op; this.arg1=arg1+"";}
+        public Tac(Lex op, Object arg1, Object arg2) {this.op=op; this.arg1=arg1; this.arg2=arg2;}
+        public Tac(Lex op, Object arg1) {this.op=op; this.arg1=arg1;}
         public Tac() {}
         public String toString() {if (arg2!=null) {return op+" "+arg1+" "+arg2;} return op+" "+arg1;}
     }
