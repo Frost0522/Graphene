@@ -65,11 +65,12 @@ public class SemanticAnalyzer implements AstVisitor {
         private int size, temp, ins;
         private HashSet<String> callers = new HashSet<>(), callees = new HashSet<>();
 
+        public String name() {return name;}
         public int size() {return size;}
         public int getTemp() {return temp;}
         public void incTemp() {temp++;}
         public void decTemp() {if (temp!=0) {temp--;}}
-        public int getRtrnAddr() {return size-2;}
+        public int getConLink() {return size-2;}
         public int getIns() {return ins;}
         public void setIns(Integer val) {ins=val;}
         public HashSet<String> callers() {return callers;}
@@ -80,6 +81,10 @@ public class SemanticAnalyzer implements AstVisitor {
                     return i;
                 }
             } return -1;
+        }
+        public String getParam(Integer index) {
+            try {return allFunctions.get(name).getParamNodes().get(index).getName();} 
+            catch (Exception e) {return "";}
         }
     }
 
