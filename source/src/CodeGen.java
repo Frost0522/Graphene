@@ -1,6 +1,8 @@
 package src;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Stack;
+
 import src.SemanticAnalyzer.SymbolTable;
 import src.SemanticAnalyzer.StackFrame;
 
@@ -9,17 +11,17 @@ public class CodeGen implements AstVisitor {
     private FnNode currentFn;
     private CodeGen self = this;
     private SymbolTable symbolTable;
-    private int insNum, labelNum, insOff;
+    private int insNum, labelNum;
     private ArrayList<Tac> triplesArray = new ArrayList<>();
-    private ArrayList<Integer> labelArray = new ArrayList<>();
+    private Stack<Integer> labelStack = new Stack<>();
     private HashMap<String,StackFrame> stackFrameMap;
-    private ArrayList<String> targetArray = new ArrayList<>();
     private StringBuilder targetCode = new StringBuilder();
 
     @Override
     public void visit(PrgrmNode prgrmNode) throws Analyzer {
         symbolTable = prgrmNode.getSymbolTable();
         stackFrameMap = symbolTable.getStackFrames();
+        System.out.println(stackFrameMap.get("ack").size());
         write(Lex.BEGINPROLOGUE,"");
         FnNode main = symbolTable.getFunction("main"); currentFn = main;
         write(Lex.CONST,1,5); /* set fp */
@@ -34,7 +36,6 @@ public class CodeGen implements AstVisitor {
         
         for (int i=0;i<triplesArray.size();i++) {System.out.println(i+" "+triplesArray.get(i));}
         System.out.println(); genTargetCode();
-        for (String code : targetArray) {targetCode.append(code);}
         System.out.println(targetCode);
     }
 
@@ -58,8 +59,7 @@ public class CodeGen implements AstVisitor {
         ifNode.getIf().accept(new CondHandler());
         ifNode.getThen().accept(this);
         if (!ifNode.getThen().isRecursive()) {write(Lex.RETURN,"");}
-        write(Lex.LEBAL,labelNum-1); labelNum--;
-        ifNode.getElse().accept(this);
+        write(Lex.ELSE,"");
     }
 
     @Override @SuppressWarnings("incomplete-switch")
@@ -71,7 +71,7 @@ public class CodeGen implements AstVisitor {
 
         binNode.getLeft().accept(reg0);
         if (rType!=Lex.LITERAL && rType!=Lex.ID) {
-            makeTemp(); binNode.getRight().accept(this);
+            binNode.getRight().accept(this);
             // to-do: add LDA IR to swap register 0 over to register 1,
             // then load the temporary value into register 0.
         } else {binNode.getRight().accept(reg1);}
@@ -93,21 +93,20 @@ public class CodeGen implements AstVisitor {
             MakeReg reg1 = new MakeReg(1);
             binNode.getLeft().accept(reg0);
             if (rType!=Lex.LITERAL && rType!=Lex.ID) {
-                makeTemp(); binNode.getRight().accept(self);
+                binNode.getRight().accept(self);
             } else {binNode.getRight().accept(reg1);}
 
             switch (binNode.nodeType()) {
                 case EQUIVALENT: {
                     if (reg0.isZero) {
-                        write(Lex.EQUIVALENT,1);
+                        write(Lex.IF,Lex.EQUIVALENT,1);
                     }
                     else if (reg1.isZero) {
-                        write(Lex.LABEL,labelNum); labelNum++;
-                        write(Lex.EQUIVALENT,0);
+                        write(Lex.IF,Lex.EQUIVALENT,0);
                     }
                     else {
                         write(Lex.MINUS,0,1); 
-                        write(Lex.EQUIVALENT,0);
+                        write(Lex.IF,Lex.EQUIVALENT,0);
                     } break;
                 }
             }
@@ -147,7 +146,7 @@ public class CodeGen implements AstVisitor {
             ArrayList<Node> params = currentFn.getParamNodes();
             ArrayList<Node> args = callNode.getArgs();
             // store fp to this frame's control link
-            write(Lex.STORE,5,stackFrameMap.get(callNode.getName()).getConLink());
+            write(Lex.STORE,5,0);
             write(Lex.CONST,stackFrameMap.get(callNode.getName()).size(),6); /* set tos */
             write(Lex.BEGINCALL,"");
             write(Lex.CALL,callNode.getName(),callNode.getArgs().size());
@@ -191,50 +190,42 @@ public class CodeGen implements AstVisitor {
         for (Tac tac : triplesArray) {
             switch (tac.op) {
                 case ENTRY: {
-                    targetArray.add("* "+tac.arg1+"\n"); insOff++;
-                    stackFrameMap.get(tac.arg1).setIns(insNum);
+                    targetCode.append("* "+tac.arg1+"\n");
                     frame=stackFrameMap.get(actName); break;
                 }
-                case BEGINPROLOGUE: {targetArray.add("* prologue\n"); insOff++; break;}
-                case ENDPROLOGUE: {targetArray.add("\n"); if (!actName.isBlank()) {prevFrame=null;} break;}
+                case BEGINPROLOGUE: {targetCode.append("* prologue\n"); break;}
+                case ENDPROLOGUE: {targetCode.append("\n"); if (!actName.isBlank()) {prevFrame=null;} break;}
                 case CALL: {
                     if (actName.isBlank()) {actName = tac.arg1+"";}
                     else {prevActName=actName; actName=tac.arg1+"";} break;
                 }
-                case ASSIGN: {break;}
-                case CONST: {targetArray.add(insNum+": LDC "+tac.arg2+","+tac.arg1+"(0)\n"); insNum++; break;}
-                case IF: {break;}
-                case EQUIVALENT: {
-                    if (prevTac.op==Lex.LABEL) {
-                        targetArray.add(insNum+": JNE "+tac.arg1+",*(4)\n");
-                    } insNum++; break;
+                case CONST: {targetCode.append(insNum+": LDC "+tac.arg2+","+tac.arg1+"(0)\n"); insNum++; break;}
+                case IF: {
+                    if (tac.arg1==Lex.EQUIVALENT) {
+                        targetCode.append(insNum+": JNE "+tac.arg2+",*"); labelStack.push(targetCode.length());
+                        targetCode.append("(4)\n"); insNum++;
+                    } break;
                 }
-                case GOTO: {break;}
-                case LABEL: {labelArray.add(insNum); break;}
-                case LEBAL: {
-                    int dex = labelArray.removeLast()+insOff;
-                    String targetStr = targetArray.get(dex);
-                    targetArray.set(dex,targetStr.replace("*",insNum+""));
-                    break;
-                }
-                case PLUS: {targetArray.add(insNum+": ADD 0,"+tac.arg1+","+tac.arg2+"\n"); insNum++; break;}
+                case ELSE: {int label = labelStack.pop(); targetCode.replace(label-1,label,insNum+""); break;}
+                case EQUIVALENT: {targetCode.append(insNum+": JNE "+tac.arg1+",*(4)\n"); insNum++; break;}
+                case PLUS: {targetCode.append(insNum+": ADD 0,"+tac.arg1+","+tac.arg2+"\n"); insNum++; break;}
                 case EXIT: {break;}
                 case MINUS: {break;}
                 case LOAD: {
-                    targetArray.add(insNum+": LD "+tac.arg1+","+tac.arg2+"(5)\n"); insNum++;
+                    targetCode.append(insNum+": LD "+tac.arg1+","+tac.arg2+"(5)\n"); insNum++;
                     String param = frame.getParam((int)tac.arg2);
                     if (!param.isBlank()) {lastLoadedParam=param;} break;
                 }
-                case STORE: {targetArray.add(insNum+": ST "+tac.arg1+","+tac.arg2+"(5)\n"); insNum++; break;}
+                case STORE: {targetCode.append(insNum+": ST "+tac.arg1+","+tac.arg2+"(5)\n"); insNum++; break;}
                 case TEMP: {break;}
                 case MOV: {
-                    targetArray.add(
+                    targetCode.append(
                         insNum+": LD 0,"+tac.arg1+"(5)\n"+
                         (insNum+1)+": ST 0,"+tac.arg2+"(5)\n"
                     ); insNum+=2; break;
                 }
                 case SWAP: {
-                    targetArray.add(
+                    targetCode.append(
                         insNum+": LD 0,"+tac.arg1+"(5)\n"+
                         (insNum+1)+": LD 1,"+tac.arg2+"(5)\n"+
                         (insNum+2)+": ST 0,"+tac.arg2+"(5)\n"+
@@ -242,18 +233,18 @@ public class CodeGen implements AstVisitor {
                     ); insNum+=4; break;
                 }
                 case RETURN: {
-                    targetArray.add(
-                        insNum+": LD 1,"+frame.getConLink()+"(5)\n"+
+                    targetCode.append(
+                        insNum+": LD 1,0(5)\n"+
                         (insNum+1)+": SUB 2,1,5\n"+
                         (insNum+2)+": JNE 2,"+(insNum+4)+"(4)\n"+
                         (insNum+3)+": LDA, 7,*(4)\n"
                     );
                     if (prevFrame==null) {
-                        targetArray.add(
+                        targetCode.append(
                             (insNum+4)+": LDA 6,0(5)\n"+
                             (insNum+5)+": LDA 5,0(1)\n"+
                             (insNum+6)+": ST 0,"+frame.getParamIndex(lastLoadedParam)+"(5)\n"+
-                            (insNum+7)+": LDA 7,"+stackFrameMap.get(actName).getIns()+"(4)\n"
+                            (insNum+7)+": LD 7,1(5)\n"
                         );
                     } insNum+=8; break;
                 }
@@ -274,8 +265,4 @@ public class CodeGen implements AstVisitor {
 
     private void write(Lex op, Object arg1, Object arg2) {triplesArray.add(new Tac(op, arg1, arg2));}
     private void write(Lex op, Object arg1) {triplesArray.add(new Tac(op, arg1));}
-    private void makeTemp() {
-        StackFrame frame = stackFrameMap.get(currentFn.getName()); 
-        write(Lex.TEMP,0,6+frame.getTemp()); frame.incTemp();
-    }
 }

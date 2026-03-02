@@ -27,7 +27,6 @@ public enum Lex {
     PRIMITIVEBINARY, PRIMITIVEUNARY, PRIMITIVEARG, MISSINGMAINARGS, EXCESSMAINARGS,
 
     // Opcodes for code generation
-    ASSIGN, 
     CALL, // call fn name and it's args
     ENTRY, // signify entry into a fn 
     EXIT, // signify departure from a fn
@@ -37,10 +36,6 @@ public enum Lex {
     ENDPROLOGUE, // signify ending of prologue
     BEGINEPILOGUE, // signify beginning of epilogue
     ENDEPILOGUE, // signify ending of epilogue
-    GOTO, 
-    LABEL,
-    LEBAL,
-    INS,
     PRINT, // output reg's val
     CONST, // place const into reg
     LOAD, // place mem addr val + fp into reg at second val

@@ -35,7 +35,6 @@ public class SemanticAnalyzer implements AstVisitor {
         public void visit(FnNode fnNode) throws Analyzer {
             // Creation of stack frames.
             StackFrame frame = new StackFrame(); frame.name = fnNode.getName();
-            frame.size = fnNode.getParamNodes().size()+2;
             stackFrameMap.put(fnNode.getName(),frame);
             // Confirm function has not already been declared.
             if (allFunctions.containsKey(fnNode.getName())) {new Analyzer(Lex.FNNAMECONFLICT,fnNode.getIdNode());}
@@ -62,17 +61,11 @@ public class SemanticAnalyzer implements AstVisitor {
     public class StackFrame {
 
         private String name;
-        private int size, temp, ins;
+        private int size=2;
         private HashSet<String> callers = new HashSet<>(), callees = new HashSet<>();
 
         public String name() {return name;}
         public int size() {return size;}
-        public int getTemp() {return temp;}
-        public void incTemp() {temp++;}
-        public void decTemp() {if (temp!=0) {temp--;}}
-        public int getConLink() {return size-2;}
-        public int getIns() {return ins;}
-        public void setIns(Integer val) {ins=val;}
         public HashSet<String> callers() {return callers;}
         public HashSet<String> callees() {return callees;}
         public int getParamIndex(String idName) {
@@ -138,7 +131,7 @@ public class SemanticAnalyzer implements AstVisitor {
         public void visit(ParamNode paramNode) throws Analyzer {
             if (!allCurrentParams.containsKey(paramNode.getName())) {
                 allCurrentParams.put(paramNode.getName(),paramNode);
-            } else {new Analyzer(Lex.PARAMNAMECONFLICT,paramNode);}
+            } else {new Analyzer(Lex.PARAMNAMECONFLICT,paramNode);} frame.size++;
         }
 
         @Override
@@ -197,6 +190,8 @@ public class SemanticAnalyzer implements AstVisitor {
 
             Lex leftSemanticType = binNode.getLeft().getSemanticType();
             Lex rightSemanticType = binNode.getRight().getSemanticType();
+
+            Lex rType = binNode.getRight().nodeType(); if (rType!=Lex.LITERAL && rType!=Lex.ID) {frame.size++;}
 
             switch (binNode.nodeType()) {
                 case PLUS,MINUS,DIVIDE,TIMES: {
