@@ -61,17 +61,20 @@ public class SemanticAnalyzer implements AstVisitor {
     public class StackFrame {
 
         private String name;
-        private int size=2;
+        private int size=2, tmpCount=2;
         private HashSet<String> callers = new HashSet<>(), callees = new HashSet<>();
 
         public String name() {return name;}
         public int size() {return size;}
+        public void addTmp() {tmpCount++;}
+        public void removeTmp() {tmpCount--;}
+        public int getTmp() {return tmpCount;}
         public HashSet<String> callers() {return callers;}
         public HashSet<String> callees() {return callees;}
         public int getParamIndex(String idName) {
             for (int i=0;i<allFunctions.get(name).getParamNodes().size();i++) {
                 if (allFunctions.get(name).getParamNodes().get(i).getName().equals(idName)) {
-                    return i;
+                    return i+size;
                 }
             } return -1;
         }

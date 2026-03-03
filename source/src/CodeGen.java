@@ -21,7 +21,6 @@ public class CodeGen implements AstVisitor {
     public void visit(PrgrmNode prgrmNode) throws Analyzer {
         symbolTable = prgrmNode.getSymbolTable();
         stackFrameMap = symbolTable.getStackFrames();
-        System.out.println(stackFrameMap.get("ack").size());
         write(Lex.BEGINPROLOGUE,"");
         FnNode main = symbolTable.getFunction("main"); currentFn = main;
         write(Lex.CONST,1,5); /* set fp */
@@ -32,11 +31,8 @@ public class CodeGen implements AstVisitor {
                 write(Lex.CONST,main.getParamNodes().size()+1,6); /* set tos */ 
                 write(Lex.ENDPROLOGUE,""); main.accept(this);
             }
-        }
-        
-        for (int i=0;i<triplesArray.size();i++) {System.out.println(i+" "+triplesArray.get(i));}
-        System.out.println(); genTargetCode();
-        System.out.println(targetCode);
+        } for (int i=0;i<triplesArray.size();i++) {System.out.println(i+" "+triplesArray.get(i));}
+        System.out.println(); genTargetCode(); System.out.println(targetCode);
     }
 
     @Override
@@ -145,9 +141,10 @@ public class CodeGen implements AstVisitor {
         public void visit(CallNode callNode) throws Analyzer {
             ArrayList<Node> params = currentFn.getParamNodes();
             ArrayList<Node> args = callNode.getArgs();
+            StackFrame frame = stackFrameMap.get(callNode.getName());
             // store fp to this frame's control link
             write(Lex.STORE,5,0);
-            write(Lex.CONST,stackFrameMap.get(callNode.getName()).size(),6); /* set tos */
+            write(Lex.CONST,frame.size(),6); /* set tos */
             write(Lex.BEGINCALL,"");
             write(Lex.CALL,callNode.getName(),callNode.getArgs().size());
             Boolean allLiterals = true;
