@@ -35,7 +35,7 @@ public class SemanticAnalyzer implements AstVisitor {
         public void visit(FnNode fnNode) throws Analyzer {
             // Creation of stack frames.
             StackFrame frame = new StackFrame(); frame.name = fnNode.getName();
-            stackFrameMap.put(fnNode.getName(),frame);
+            frame.argSize=fnNode.getParamNodes().size(); stackFrameMap.put(fnNode.getName(),frame);
             // Confirm function has not already been declared.
             if (allFunctions.containsKey(fnNode.getName())) {new Analyzer(Lex.FNNAMECONFLICT,fnNode.getIdNode());}
             // Check for functions named after primitive function calls.
@@ -61,26 +61,25 @@ public class SemanticAnalyzer implements AstVisitor {
     public class StackFrame {
 
         private String name;
-        private int size=2, tmpCount=2;
+        private int argSize, size=argSize+2, tmpSize, ins;
         private HashSet<String> callers = new HashSet<>(), callees = new HashSet<>();
 
         public String name() {return name;}
-        public int size() {return size;}
-        public void addTmp() {tmpCount++;}
-        public void removeTmp() {tmpCount--;}
-        public int getTmp() {return tmpCount;}
+        public int getCtrlLinkLoc() {return argSize;}
+        public int getStateLoc() {return argSize+1;}
+        public int addTmp() {tmpSize++; return this.size();}
+        public int removeTmp() {int prevTmpSize=tmpSize; tmpSize--; return prevTmpSize;}
+        public void setIns(Integer val) {ins=val;}
+        public int getIns() {return ins;}
+        public int size() {return size+tmpSize;}
         public HashSet<String> callers() {return callers;}
         public HashSet<String> callees() {return callees;}
         public int getParamIndex(String idName) {
             for (int i=0;i<allFunctions.get(name).getParamNodes().size();i++) {
                 if (allFunctions.get(name).getParamNodes().get(i).getName().equals(idName)) {
-                    return i+size;
+                    return i;
                 }
             } return -1;
-        }
-        public String getParam(Integer index) {
-            try {return allFunctions.get(name).getParamNodes().get(index).getName();} 
-            catch (Exception e) {return "";}
         }
     }
 
@@ -193,8 +192,6 @@ public class SemanticAnalyzer implements AstVisitor {
 
             Lex leftSemanticType = binNode.getLeft().getSemanticType();
             Lex rightSemanticType = binNode.getRight().getSemanticType();
-
-            Lex rType = binNode.getRight().nodeType(); if (rType!=Lex.LITERAL && rType!=Lex.ID) {frame.size++;}
 
             switch (binNode.nodeType()) {
                 case PLUS,MINUS,DIVIDE,TIMES: {
