@@ -41,44 +41,55 @@ public class CodeGen implements AstVisitor {
 
     @Override
     public void visit(CallNode callNode) throws Analyzer {
+        StackFrame prevFrame = stackFrameMap.get(currentFn.getName());
         write(Lex.CALL,callNode.getName(),callNode.getArgs().size());
         if (callNode.getName().equals("print")) {/* to-do */}
-        else {
-            StackFrame prevFrame = stackFrameMap.get(currentFn.getName());
-            // If recursive, store arguments to current frame
-            if (frame.name().equals(callNode.getName())) {
+        else if (frame.name().equals(callNode.getName())) {
+            Boolean isNestedRec = false;
+            for (Node arg : callNode.getArgs()) {
+                if (arg.getName().equals(frame.name())) {isNestedRec=true;}
+            }
+            if (isNestedRec) {
+                
+            } else {
                 for (int i=0;i<callNode.getArgs().size();i++) {
                     Node arg = callNode.getArgs().get(i);
-                    if ((arg instanceof CallNode)&&(arg.getName().equals(frame.name()))) {
-                        /* todo */
-                        arg.accept(this);
-                    } else {
-                        arg.accept(this); /* arg is placed into reg 0 */
-                        write(Lex.STORE,0,i); /* arg is stored to current frame */
-                    }
+                    arg.accept(this); /* arg is placed into reg 0 */
+                    write(Lex.STORE,0,i); /* arg is stored to current frame */
                 } write(Lex.GOTO,frame.name());
-            } else {
-            // Push new frame on to the call stack, start with arguments.
-                for (int i=0;i<callNode.getArgs().size();i++) {
-                    callNode.getArgs().get(i).accept(this); /* arg is placed into reg 0 */
-                    write(Lex.STORE,0,frame.size()+i); /* arg is stored to new frame */
-                }
-                // Next set control link and state.
-                write(Lex.STORE,5,(prevFrame.size()+1)+frame.getCtrlLinkLoc());
-                write(Lex.LOAD,0,prevFrame.getStateLoc());
-                write(Lex.STORE,0,(prevFrame.size()+1)+frame.getStateLoc());
-                // Finally, update the fp and tos, and make the call to the function.
-                write(Lex.BEGINCALL,""); symbolTable.getFunction(callNode.getName()).accept(this);
             }
-        } write(Lex.ENDCALL,"");
+        } else {
+            // Push new frame and args on to the call stack.
+            for (int i=0;i<callNode.getArgs().size();i++) {
+                callNode.getArgs().get(i).accept(this); /* arg is placed into reg 0 */
+                write(Lex.STORE,0,frame.size()+i); /* arg is stored to new frame */
+            } // Set control link and state.
+            write(Lex.STORE,5,prevFrame.size()+frame.getCtrlLinkLoc());
+            write(Lex.LOAD,0,prevFrame.getStateLoc());
+            write(Lex.STORE,0,prevFrame.size()+frame.getStateLoc());
+            // Make a call to the function to update fp and tos.
+            write(Lex.BEGINCALL,""); /* update fp and tos to new frame */
+            symbolTable.getFunction(callNode.getName()).accept(this);
+            write(Lex.ENDCALL,""); /* restore prev frame and pointers */
+        }
     }
 
-    @Override
+    @Override @SuppressWarnings("incomplete-switch")
     public void visit(IfNode ifNode) throws Analyzer {
-        ifNode.getIf().accept(new CondHandler()); ifNode.getThen().accept(this);
-        if (!(ifNode.getThen() instanceof CallNode)) {write(Lex.RETURN,"");}
-        write(Lex.ELSE,""); ifNode.getElse().accept(this); 
-        if (!(ifNode.getElse() instanceof CallNode)) {write(Lex.RETURN,"");}
+        ifNode.getIf().accept(new CondHandler());
+        ifNode.getThen().accept(this);
+        switch (ifNode.getThen().nodeType()) {
+            case PLUS,MINUS,DIVIDE,TIMES,EQUIVALENT,LESSTHAN,AND,OR,ID,LITERAL: {
+                write(Lex.RETURN, ""); break;
+            }
+        }
+        write(Lex.ELSE,""); 
+        ifNode.getElse().accept(this);
+        switch (ifNode.getElse().nodeType()) {
+            case PLUS,MINUS,DIVIDE,TIMES,EQUIVALENT,LESSTHAN,AND,OR,ID,LITERAL: {
+                write(Lex.RETURN, ""); break;
+            }
+        }
     }
 
     @Override @SuppressWarnings("incomplete-switch")
@@ -141,22 +152,31 @@ public class CodeGen implements AstVisitor {
         @Override @SuppressWarnings("incomplete-switch")
         public void visit(BinaryNode binNode) throws Analyzer {
 
-            Lex rType = binNode.getRight().nodeType();
-            if (rType!=Lex.ID&&rType!=Lex.LITERAL) {
-                binNode.getLeft().accept(self);
-                write(Lex.STORE,0,makeTemp());
-                new Assign(binNode.getRight(),1);
-                write(Lex.LOAD,0,removeTemp());
+            // Special cases
+            if (binNode.nodeType()==Lex.EQUIVALENT) {
+                if (binNode.getLeft().getName().equals("0")) {
+                    binNode.getRight().accept(self); write(Lex.IF,Lex.EQUIVALENT,0);
+                } else if (binNode.getRight().getName().equals("0")) {
+                    binNode.getLeft().accept(self); write(Lex.IF,Lex.EQUIVALENT,0);
+                }
             } else {
-                binNode.getLeft().accept(self);
-                new Assign(binNode.getRight(),1);
-            }
+                Lex rType = binNode.getRight().nodeType();
+                if (rType!=Lex.ID&&rType!=Lex.LITERAL) {
+                    binNode.getLeft().accept(self);
+                    write(Lex.STORE,0,makeTemp());
+                    new Assign(binNode.getRight(),1);
+                    write(Lex.LOAD,0,removeTemp());
+                } else {
+                    binNode.getLeft().accept(self);
+                    new Assign(binNode.getRight(),1);
+                }
 
-            switch (binNode.nodeType()) {
-                case EQUIVALENT: {
-                    write(Lex.MINUS,0,1);
-                    write(Lex.IF,Lex.EQUIVALENT,0); 
-                    break;
+                switch (binNode.nodeType()) {
+                    case EQUIVALENT: {
+                        write(Lex.MINUS,0,1);
+                        write(Lex.IF,Lex.EQUIVALENT,0);
+                        break;
+                    }
                 }
             }
         }
@@ -173,7 +193,7 @@ public class CodeGen implements AstVisitor {
                 case CALL: {prevFrame=currFrame; currFrame=stackFrameMap.get(tac.arg1+""); break;}
                 case BEGINCALL: {
                     /* Advance the fp and tos */ targetCode.append(
-                        insNum+": LDA 5,0(6)\n"+(insNum+1)+": LDA 6,"+(prevFrame.size()+1)+"(6)\n\n"
+                        insNum+": LDA 5,0(6)\n"+(insNum+1)+": LDA 6,"+currFrame.size()+"(6)\n\n"
                     ); insNum+=2; break;
                 }
                 case CONST: {targetCode.append(insNum+": LDC "+tac.arg2+","+tac.arg1+"(0)\n"); insNum++; break;}
@@ -214,10 +234,8 @@ public class CodeGen implements AstVisitor {
                         insNum+": LD 1,"+currFrame.getStateLoc()+"(5)\n"+
                         (insNum+1)+": JNE 1,"+(insNum+3)+"(4)\n"+
                         (insNum+2)+": LDA 7,*(4)\n"+
-                        (insNum+3)+": LDA 6,0(5)\n"+
-                        (insNum+4)+": LD 5,"+currFrame.getCtrlLinkLoc()+"(5)\n"+
-                        (insNum+5)+": LDA 7,0(1)\n"
-                    ); insNum+=6; break;
+                        (insNum+3)+": LDA 7,0(1)\n"
+                    ); insNum+=4; break;
                 }
             }
         }
