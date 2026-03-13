@@ -45,19 +45,34 @@ public class CodeGen implements AstVisitor {
         write(Lex.CALL,callNode.getName(),callNode.getArgs().size());
         if (callNode.getName().equals("print")) {/* to-do */}
         else if (frame.name().equals(callNode.getName())) {
-            Boolean isNestedRec = false;
-            for (Node arg : callNode.getArgs()) {
-                if (arg.getName().equals(frame.name())) {isNestedRec=true;}
-            }
-            if (isNestedRec) {
-                
-            } else {
-                for (int i=0;i<callNode.getArgs().size();i++) {
-                    Node arg = callNode.getArgs().get(i);
+
+            StackFrame newFrame = stackFrameMap.get(callNode.getName());
+
+            for (int i=0;i<callNode.getArgs().size();i++) {
+
+                Node arg = callNode.getArgs().get(i); 
+                Lex argType = arg.nodeType(); 
+                int last = callNode.getArgs().size()-1;
+
+                if (argType==Lex.ID||argType==Lex.LITERAL||i==last) {
                     arg.accept(this); /* arg is placed into reg 0 */
                     write(Lex.STORE,0,i); /* arg is stored to current frame */
-                } write(Lex.GOTO,frame.name());
+                } else if (argType==Lex.FNCALL) /* case for nested functions */ {
+                    
+                } else /* case where temp vars are added to stack frames */ {
+                    arg.accept(this); /* arg is placed into reg 0 */
+                    write(Lex.STORE,0,newFrame.size()+i);
+                    newFrame.addTmp();
+                }
             }
+
+            for (int i=0;i<newFrame.getTmpSize();i++) {
+                write(Lex.LOAD,0,newFrame.size()-1);
+                write(Lex.STORE,0,i); newFrame.removeTmp();
+            } 
+            
+            write(Lex.GOTO,frame.name());
+
         } else {
             // Push new frame and args on to the call stack.
             for (int i=0;i<callNode.getArgs().size();i++) {
