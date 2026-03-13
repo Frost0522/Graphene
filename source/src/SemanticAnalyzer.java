@@ -69,6 +69,7 @@ public class SemanticAnalyzer implements AstVisitor {
         public int getStateLoc() {return argSize+1;}
         public int addTmp() {tmpSize++; return this.size();}
         public int removeTmp() {int prevTmpSize=tmpSize; tmpSize--; return prevTmpSize;}
+        public int getTmpSize() {return tmpSize;}
         public void setIns(Integer val) {ins=val;}
         public int getIns() {return ins;}
         public int size() {return size+tmpSize;}
