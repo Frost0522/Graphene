@@ -1,6 +1,5 @@
 package src;
 import java.util.HashMap;
-import java.util.HashSet;
 
 public class SemanticAnalyzer implements AstVisitor {
 
@@ -34,8 +33,9 @@ public class SemanticAnalyzer implements AstVisitor {
         @Override
         public void visit(FnNode fnNode) throws Analyzer {
             // Creation of stack frames.
-            StackFrame frame = new StackFrame(); frame.name = fnNode.getName();
-            frame.argSize=fnNode.getParamNodes().size(); stackFrameMap.put(fnNode.getName(),frame);
+            StackFrame frame = new StackFrame(); 
+            frame.setName(fnNode.getName()); frame.setParams(fnNode.getParamNodes());
+            frame.setArgSize(fnNode.getParamNodes().size()); stackFrameMap.put(fnNode.getName(),frame);
             // Confirm function has not already been declared.
             if (allFunctions.containsKey(fnNode.getName())) {new Analyzer(Lex.FNNAMECONFLICT,fnNode.getIdNode());}
             // Check for functions named after primitive function calls.
@@ -58,32 +58,6 @@ public class SemanticAnalyzer implements AstVisitor {
         public void visit(TypeNode typeNode) {typeNode.setSemanticType(typeNode.getType());}
     }
 
-    public class StackFrame {
-
-        private String name;
-        private int argSize, size=argSize+2, tmpSize, ins;
-        private HashSet<String> callers = new HashSet<>(), callees = new HashSet<>();
-
-        public String name() {return name;}
-        public int getCtrlLinkLoc() {return argSize;}
-        public int getStateLoc() {return argSize+1;}
-        public int addTmp() {tmpSize++; return this.size();}
-        public int removeTmp() {int prevTmpSize=tmpSize; tmpSize--; return prevTmpSize;}
-        public int getTmpSize() {return tmpSize;}
-        public void setIns(Integer val) {ins=val;}
-        public int getIns() {return ins;}
-        public int size() {return size+tmpSize;}
-        public HashSet<String> callers() {return callers;}
-        public HashSet<String> callees() {return callees;}
-        public int getParamIndex(String idName) {
-            for (int i=0;i<allFunctions.get(name).getParamNodes().size();i++) {
-                if (allFunctions.get(name).getParamNodes().get(i).getName().equals(idName)) {
-                    return i;
-                }
-            } return -1;
-        }
-    }
-
     public class SymbolTable implements AstVisitor {
 
         private HashMap<String,ParamNode> allCurrentParams;
@@ -96,8 +70,8 @@ public class SemanticAnalyzer implements AstVisitor {
         public String toString() {
             String output = "";
             for (StackFrame frame : stackFrameMap.values()) {
-                output+="Function: "+frame.name+"\n"+
-                "Callees: "+frame.callees+"\nCallers: "+frame.callers+"\n\n";
+                output+="Function: "+frame.getName()+"\n"+
+                "Callees: "+frame.callees()+"\nCallers: "+frame.callers()+"\n\n";
             } return output.trim();
         }
 
@@ -134,19 +108,19 @@ public class SemanticAnalyzer implements AstVisitor {
         public void visit(ParamNode paramNode) throws Analyzer {
             if (!allCurrentParams.containsKey(paramNode.getName())) {
                 allCurrentParams.put(paramNode.getName(),paramNode);
-            } else {new Analyzer(Lex.PARAMNAMECONFLICT,paramNode);} frame.size++;
+            } else {new Analyzer(Lex.PARAMNAMECONFLICT,paramNode);}
         }
 
         @Override
         public void visit(CallNode callNode) throws Analyzer {
             // Add callee to current frame.
-            frame.callees.add(callNode.getName());
+            frame.addCallee(callNode.getName());
             // If not print, set the call node's semantic type to that of it's declared function return type.
             if (!callNode.getName().equals("print")) {
                 // Add calling frame as caller to the callee.
-                stackFrameMap.get(callNode.getName()).callers.add(frame.name);
+                stackFrameMap.get(callNode.getName()).addCaller(frame.getName());
                 // Set call node to recursive if the function it is being called from has the same name.
-                if (frame.name.equals(callNode.getName())) {callNode.setRecursive();}
+                if (frame.getName().equals(callNode.getName())) {callNode.setRecursive();}
                 // Check that the function has been declared.
                 if (!allFunctions.containsKey(callNode.getName())) {new Analyzer(Lex.NOFNCALL,callNode);} 
                 callNode.setSemanticType(allFunctions.get(callNode.getName()).getReturnType().getSemanticType());

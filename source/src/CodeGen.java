@@ -3,14 +3,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Stack;
 import src.SemanticAnalyzer.SymbolTable;
-import src.SemanticAnalyzer.StackFrame;
 
 public class CodeGen implements AstVisitor {
 
     private FnNode currentFn;
     private CodeGen self = this;
     private SymbolTable symbolTable;
-    private int insNum;
+    private int insNum, fp, tos;
     private ArrayList<Tac> triplesArray = new ArrayList<>();
     private Stack<Integer> labelStack = new Stack<>();
     private HashMap<String,StackFrame> stackFrameMap;
@@ -21,12 +20,13 @@ public class CodeGen implements AstVisitor {
     public void visit(PrgrmNode prgrmNode) throws Analyzer {
         symbolTable = prgrmNode.getSymbolTable();
         stackFrameMap = symbolTable.getStackFrames();
-        FnNode main = symbolTable.getFunction("main");
-        StackFrame frame = stackFrameMap.get("main");
+        frame = stackFrameMap.get("main");
+        fp=1; tos=frame.size()+1;
         write(Lex.BEGINPROLOGUE,"");
-        write(Lex.CONST,1,5); /* set fp */
-        write(Lex.CONST,frame.size()+1,6); /* set tos */
-        write(Lex.ENDPROLOGUE,""); main.accept(this);
+        write(Lex.CONST,fp,5); /* set fp */
+        write(Lex.CONST,tos,6); /* set tos */
+        write(Lex.ENDPROLOGUE,"");
+        symbolTable.getFunction("main").accept(this);
         for (int i=0;i<triplesArray.size();i++) {System.out.println(i+" "+triplesArray.get(i));}
         System.out.println(); genTargetCode(); System.out.println(targetCode);
     }
@@ -41,20 +41,17 @@ public class CodeGen implements AstVisitor {
 
     @Override
     public void visit(CallNode callNode) throws Analyzer {
-        StackFrame prevFrame = stackFrameMap.get(currentFn.getName());
+        StackFrame newFrame = stackFrameMap.get(callNode.getName());
         write(Lex.CALL,callNode.getName(),callNode.getArgs().size());
         if (callNode.getName().equals("print")) {/* to-do */}
-        else if (frame.name().equals(callNode.getName())) {
-
-            StackFrame newFrame = stackFrameMap.get(callNode.getName());
+        else if (frame.getName().equals(callNode.getName())) {
 
             for (int i=0;i<callNode.getArgs().size();i++) {
 
                 Node arg = callNode.getArgs().get(i); 
                 Lex argType = arg.nodeType(); 
-                int last = callNode.getArgs().size()-1;
 
-                if (argType==Lex.ID||argType==Lex.LITERAL||i==last) {
+                if (argType==Lex.ID||argType==Lex.LITERAL) {
                     arg.accept(this); /* arg is placed into reg 0 */
                     write(Lex.STORE,0,i); /* arg is stored to current frame */
                 } else if (argType==Lex.FNCALL) /* case for nested functions */ {
@@ -71,7 +68,7 @@ public class CodeGen implements AstVisitor {
                 write(Lex.STORE,0,i); newFrame.removeTmp();
             } 
             
-            write(Lex.GOTO,frame.name());
+            write(Lex.GOTO,frame.getName());
 
         } else {
             // Push new frame and args on to the call stack.
@@ -79,9 +76,7 @@ public class CodeGen implements AstVisitor {
                 callNode.getArgs().get(i).accept(this); /* arg is placed into reg 0 */
                 write(Lex.STORE,0,frame.size()+i); /* arg is stored to new frame */
             } // Set control link and state.
-            write(Lex.STORE,5,prevFrame.size()+frame.getCtrlLinkLoc());
-            write(Lex.LOAD,0,prevFrame.getStateLoc());
-            write(Lex.STORE,0,prevFrame.size()+frame.getStateLoc());
+            newFrame.setCtrlLinkLoc(fp); fp=tos; tos+=(newFrame.size()+1);
             // Make a call to the function to update fp and tos.
             write(Lex.BEGINCALL,""); /* update fp and tos to new frame */
             symbolTable.getFunction(callNode.getName()).accept(this);
@@ -246,7 +241,7 @@ public class CodeGen implements AstVisitor {
                 }
                 case RETURN: {
                     targetCode.append(
-                        insNum+": LD 1,"+currFrame.getStateLoc()+"(5)\n"+
+                        insNum+": LDC 1,"+currFrame.getStateLoc()+"(0)\n"+
                         (insNum+1)+": JNE 1,"+(insNum+3)+"(4)\n"+
                         (insNum+2)+": LDA 7,*(4)\n"+
                         (insNum+3)+": LDA 7,0(1)\n"
