@@ -46,12 +46,10 @@ switch ($true) {
         if (-not $file) {Write-Host "A positional argument for a Graphene file name must be provided."; exit 1}
         java -jar ../bin/src/graphene.jar $file "graphenec" $args;
         $file = '../bin/' + (Split-Path -Path $file -Leaf) + '.tm'
-        $tmOutStr = & "../bin/tm-cli-go.exe" $file
+        $tmOutStr = & "../bin/tm-cli-go.exe" $file $args
         $numbers = $tmOutStr | Where-Object { $_.StartsWith('O') } | ForEach-Object {
             ($_ -split '\s+')[-1] -as [int]
-        }
-        Write-Output $numbers
-        if (Test-Path $file) {Remove-Item ../bin/$file}
+        }; Write-Output $numbers; if (Test-Path $file) {Remove-Item ../bin/$file};
     }
 }
 '@
