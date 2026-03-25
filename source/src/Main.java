@@ -51,7 +51,8 @@ public class Main {
                 CodeGen codeGen = new CodeGen();
                 parser.nStack.peek().accept(codeGen);
                 FileWriter writer = new FileWriter("../bin/"+fileNameTmExt);
-                writer.write(codeGen.getTargetCode()); writer.close(); break;
+                writer.write(codeGen.getTargetCode()); writer.close();
+                break;
             } 
             default: {pushReader.close(); throw new Analyzer("Unrecognized script type.");}
         } pushReader.close();
