@@ -1,6 +1,7 @@
 package src;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PushbackReader;
 
@@ -47,10 +48,10 @@ public class Main {
             case "graphenec": {
                 Parser parser = new Parser(new Scanner(pushReader));
                 parser.nStack.peek().accept(new SemanticAnalyzer());
-                parser.nStack.peek().accept(new CodeGen());
-                // FileWriter writer = new FileWriter("../bin/"+fileNameTmExt);
-                // writer.write(codeGen.getTargetCode()); writer.close();
-                break;
+                CodeGen codeGen = new CodeGen();
+                parser.nStack.peek().accept(codeGen);
+                FileWriter writer = new FileWriter("../bin/"+fileNameTmExt);
+                writer.write(codeGen.getTargetCode()); writer.close(); break;
             } 
             default: {pushReader.close(); throw new Analyzer("Unrecognized script type.");}
         } pushReader.close();
