@@ -34,15 +34,17 @@ public enum Lex {
     ENDCALL, // signify when a frame is dereferenced
     BEGINPROLOGUE, // signify beginning of prologue
     ENDPROLOGUE, // signify ending of prologue
-    BEGINEPILOGUE, // signify beginning of epilogue
-    ENDEPILOGUE, // signify ending of epilogue
+    EPILOGUE, // ends execution of the program
     PRINT, // output reg's val
+    MALLOC, // first val given is the space allocated in memory for the size of a given frame
+    RESTORE, // used directly after malloc to restore previous frame
     CONST, // place const into reg
-    PUT, // move the val at the first reg to the second
+    PASS, // passes args of current frame to the next frame
+    ALTER, // uses first val to either increase or decrease the second val's reg
     GOTO, // goes to first instruction of frame given
     LOAD, // place mem addr val + fp into reg at second val
     SWAP, // swap first mem addr val + fp with the second mem addr val + fp
-    MOV, // move first mem addr val + fp to the second mem addr val + fp
+    COPY, // move first mem addr val + fp to the second mem addr val + fp
     STORE; // place register into memory address at the fp plus second value
 
     @SuppressWarnings("incomplete-switch")
