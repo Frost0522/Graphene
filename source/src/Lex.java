@@ -35,7 +35,7 @@ public enum Lex {
     BEGINPROLOGUE, // signify beginning of prologue
     ENDPROLOGUE, // signify ending of prologue
     EPILOGUE, // ends execution of the program
-    PRINT, // output reg's val
+    PRINT, // output val at reg 0
     MALLOC, // first val given is the space allocated in memory for the size of a given frame
     RESTORE, // used directly after malloc to restore previous frame
     CONST, // place const into reg
