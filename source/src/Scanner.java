@@ -23,8 +23,8 @@ public class Scanner {
         stateLst.add(new State_3());
         stateLst.add(new State_4());
         stateLst.add(new State_5());
-        
         State startState = stateLst.get(0);
+        
         while (run) {
             try {
                 Token token = startState.process(stateLst, charLst, Scanner.next());
