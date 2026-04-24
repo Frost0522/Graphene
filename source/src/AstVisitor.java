@@ -37,8 +37,6 @@ abstract class Node {
     abstract void setSemanticType(Lex type);
     abstract String getErrorStr();
     abstract String getName();
-    abstract Boolean isRecursive();
-    abstract void setRecursive();
 }
 
 class NullNode extends Node {
@@ -54,8 +52,6 @@ class NullNode extends Node {
     protected void setSemanticType(Lex type) {}
     protected String getErrorStr() {return "";}
     protected String getName() {return "";}
-    protected Boolean isRecursive() {return false;}
-    protected void setRecursive() {}
 }
 
 class IdNode extends Node {
@@ -63,7 +59,6 @@ class IdNode extends Node {
     private Token id;
     private Lex semanticType;
     private Lex sign = Lex.PLUS;
-    private Boolean isRecusive = false;
 
     public IdNode(Token t) {this.id = t;}
     public String toString() {
@@ -86,15 +81,12 @@ class IdNode extends Node {
     protected Lex nodeType() {return Lex.ID;}
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
-    protected Boolean isRecursive() {return isRecusive;}
-    protected void setRecursive() {isRecusive = true;}
 }
 
 class TypeNode extends Node {
 
     private Token type;
     private Lex semanticType;
-    private Boolean isRecusive = false;
 
     public TypeNode(Token t) {this.type = t;}
     public String toString() {return type.getType().toString().toLowerCase();}
@@ -109,8 +101,6 @@ class TypeNode extends Node {
     protected void setSemanticType(Lex type) {semanticType = type;}
     protected String getErrorStr() {return this.toString();}
     protected String getName() {return "";}
-    protected Boolean isRecursive() {return isRecusive;}
-    protected void setRecursive() {isRecusive = true;}
 }
 
 class ReturnNode extends TypeNode {
@@ -133,7 +123,6 @@ class LitNode extends Node {
     private Lex semanticType;
     private Lex sign = Lex.PLUS;
     private int value;
-    private Boolean isRecusive = false;
     
     public LitNode(Token t) {
         this.literal = t;
@@ -163,8 +152,6 @@ class LitNode extends Node {
     protected void setSemanticType(Lex type) {semanticType = type;}
     protected String getErrorStr() {return this.toString();}
     protected String getName() {return ""+getValue();}
-    protected Boolean isRecursive() {return isRecusive;}
-    protected void setRecursive() {isRecusive = true;}
 }
 
 class ParamNode extends Node {
@@ -173,7 +160,6 @@ class ParamNode extends Node {
     private Node type;
     private String symbol;
     private Lex semanticType;
-    private Boolean isRecusive = false;
 
     public ParamNode(Stack<Node> stack) {
         this.type = stack.pop(); this.id = stack.pop(); this.symbol = ":";
@@ -191,8 +177,6 @@ class ParamNode extends Node {
     protected void setSemanticType(Lex type) {semanticType = type;}
     protected String getErrorStr() {return this.toString();}
     protected String getName() {return id.toString().replace("identifier ","");}
-    protected Boolean isRecursive() {return isRecusive;}
-    protected void setRecursive() {isRecusive = true;}
 }
 
 class FnNode extends Node {
@@ -202,7 +186,6 @@ class FnNode extends Node {
     private Node returnType;
     private ArrayList<Node> body = new ArrayList<>();
     private Lex semanticType;
-    private Boolean isRecusive = false;
 
     public FnNode(Stack<Node> stack) {
         while (stack.peek().nodeType()!=Lex.RETURN) {body.add(0, stack.pop());}
@@ -236,8 +219,6 @@ class FnNode extends Node {
     protected void setSemanticType(Lex type) {semanticType = type;}
     protected String getErrorStr() {return id.toString();}
     protected String getName() {return id.toString().replace("identifier ","");}
-    protected Boolean isRecursive() {return isRecusive;}
-    protected void setRecursive() {isRecusive = true;}
 }
 
 class CallNode extends Node {
@@ -246,7 +227,6 @@ class CallNode extends Node {
     private ArrayList<Node> args = new ArrayList<>();
     private Lex semanticType;
     private Lex sign = Lex.PLUS;
-    private Boolean isRecusive = false;
 
     public CallNode(Stack<Node> stack) {
         Node node = stack.pop();
@@ -272,8 +252,6 @@ class CallNode extends Node {
     protected void setSemanticType(Lex type) {semanticType = type;}
     protected String getErrorStr() {return "function call "+"'"+id.toString().replace("identifier ","")+"'";}
     protected String getName() {return id.toString().replace("identifier ","");}
-    protected Boolean isRecursive() {return isRecusive;}
-    protected void setRecursive() {isRecusive = true;}
 }
 
 class IfNode extends Node {
@@ -282,7 +260,6 @@ class IfNode extends Node {
     private Node _then;
     private Node _else;
     private Lex semanticType;
-    private Boolean isRecusive = false;
 
     public IfNode(Stack<Node> stack) {_else = stack.pop(); _then = stack.pop(); _if = stack.pop();}
     public String toString() {return "if\n   "+_if+"\nthen\n   "+_then+"\nelse\n   "+_else;}
@@ -299,8 +276,6 @@ class IfNode extends Node {
     protected void setSemanticType(Lex type) {semanticType = type;}
     protected String getErrorStr() {return "";}
     protected String getName() {return "";}
-    protected Boolean isRecursive() {return isRecusive;}
-    protected void setRecursive() {isRecusive = true;}
 }
 
 class PrgrmNode extends Node {
@@ -308,7 +283,6 @@ class PrgrmNode extends Node {
     private ArrayList<Node> functionList = new ArrayList<>();
     private Lex semanticType;
     private SymbolTable symbolTable;
-    private Boolean isRecusive = false;
 
     public PrgrmNode(Stack<Node> stack) {while (!stack.empty()) {functionList.add(0,stack.pop());}}
     public String toString() {
@@ -329,8 +303,6 @@ class PrgrmNode extends Node {
     protected SymbolTable getSymbolTable() {return this.symbolTable;}
     protected String getErrorStr() {return "";}
     protected String getName() {return "";}
-    protected Boolean isRecursive() {return isRecusive;}
-    protected void setRecursive() {isRecusive = true;}
 }
 
 class ExpNode extends Node {
@@ -338,7 +310,6 @@ class ExpNode extends Node {
     private Node exp;
     private Lex semanticType;
     private Lex sign = Lex.PLUS;
-    private Boolean isRecusive = false;
 
     public Lex type;
     public ExpNode(Stack<Node> stack) {exp = stack.pop();}
@@ -356,15 +327,12 @@ class ExpNode extends Node {
     protected void setSemanticType(Lex type) {semanticType = type;}
     protected String getErrorStr() {return "";}
     protected String getName() {return exp.getName();}
-    protected Boolean isRecursive() {return isRecusive;}
-    protected void setRecursive() {isRecusive = true;}
 }
 
 class NotNode extends Node {
 
     private Node notNode;
     private Lex semanticType;
-    private Boolean isRecusive = false;
     
     public NotNode(Stack<Node> stack) {notNode = stack.pop();}
     public String toString() {return "\n"+notNode.toString();}
@@ -381,8 +349,6 @@ class NotNode extends Node {
     protected int[] position() {return notNode.position();}
     protected String getErrorStr() {return "";}
     protected String getName() {return notNode.getName();}
-    protected Boolean isRecursive() {return isRecusive;}
-    protected void setRecursive() {isRecusive = true;}
 }
 
 class BinaryNode extends Node {
@@ -392,7 +358,6 @@ class BinaryNode extends Node {
     private Node rightNode;
     private String operator;
     private Lex nodeType;
-    private Boolean isRecusive = false;
 
     public BinaryNode(Stack<Node> stack, String s, Lex type) {
         this.rightNode = stack.pop(); this.leftNode = stack.pop();
@@ -412,8 +377,6 @@ class BinaryNode extends Node {
     protected String getErrorStr() {return "";}
     protected void accept(AstVisitor visitor) throws Analyzer {visitor.visit(this);}
     protected String getName() {return "";}
-    protected Boolean isRecursive() {return isRecusive;}
-    protected void setRecursive() {isRecusive = true;}
 }
 
 class EqNode extends BinaryNode {public EqNode(Stack<Node> stack) {super(stack, "==", Lex.EQUIVALENT);}}
