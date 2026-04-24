@@ -13,16 +13,16 @@ public class Main {
     public static String[] arguments;
 
     public static void main(String[] args) throws IOException, Analyzer {
-
+        
         arguments = args;
-        if (!args[0].substring(args[0].length()-3).equals(".gr")) {args[0]+=".gr";}
-        String fileName = args[0].substring(Math.max(args[0].lastIndexOf("/"),args[0].lastIndexOf("\\"))+1);
-        String fileNameTmExt = fileName.substring(0,fileName.length()-3)+
-        fileName.substring(fileName.length()-3,fileName.length()).replace(".gr",".tm");
+
+        String[] path = args[0].replace("\\","/").split("/");
+        String fileName = path[path.length-1];
+        String fileNameTmExt = fileName.replace(".gr",".tm");
         File file = new File(args[0]); Main input = new Main(args[1]);
         if (!file.exists()) {throw new Analyzer("File does not exist.");}
-
         PushbackReader pushReader = new PushbackReader(new FileReader(file));
+        
         switch (input.scriptType) {
             case "graphenes": {
                 System.out.println(new Scanner(pushReader));
