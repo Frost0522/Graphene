@@ -16,8 +16,8 @@ public class StackFrame {
 
     public int getStateLoc() {return size()-1;}
 
-    public int addTmp() {tmpSize++; return this.size();}
-    public int removeTmp() {int prevTmpSize=tmpSize; tmpSize--; return prevTmpSize;}
+    public void addTmp() {tmpSize++;}
+    public void removeTmp() {tmpSize--;}
     public int getTmpSize() {return tmpSize;}
 
     public void setArgSize(int args) {argSize=args;}
