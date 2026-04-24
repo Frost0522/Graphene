@@ -16,36 +16,17 @@ param (
     $file
 )
 
+if (-not $file) {Write-Host "A positional argument for a Graphene file name must be provided."; exit 1}
+if (-not $file.EndsWith(".gr")) {$file+=".gr"}
+
 switch ($true) {
-    {$s} {
-        if (-not $file) {Write-Host "A positional argument for a Graphene file name must be provided."; exit 1}
-        java -jar ../bin/src/graphene.jar $file "graphenes"; break;
-    }
-    {$f} {
-        if (-not $file) {Write-Host "A positional argument for a Graphene file name must be provided."; exit 1}
-        java -jar ../bin/src/graphene.jar $file "graphenef"; break;
-    }
-    {$p} {
-        if (-not $file) {Write-Host "A positional argument for a Graphene file name must be provided."; exit 1}
-        java -jar ../bin/src/graphene.jar $file "graphenep"; break;
-    }
-    {$v} {
-        if (-not $file) {Write-Host "A positional argument for a Graphene file name must be provided."; exit 1}
-        java -jar ../bin/src/graphene.jar $file "graphenev"; break;
-    }
-    {$allPrograms} {
-        if ($file) {Write-Host "No positional argument needed."; exit 1}
-        $files = Get-ChildItem -Path "../programs/*.gr";
-        $files | ForEach-Object {
-            java -jar ../bin/src/graphene.jar ("../programs/" + $_.BaseName) "graphenec" $args;
-            if ($_ -ne $files[-1]) {Write-Host ""}
-        }
-        break;
-    }
+    {$s} {java -jar ../bin/src/graphene.jar $file "graphenes"; break;}
+    {$f} {java -jar ../bin/src/graphene.jar $file "graphenef"; break;}
+    {$p} {java -jar ../bin/src/graphene.jar $file "graphenep"; break;}
+    {$v} {java -jar ../bin/src/graphene.jar $file "graphenev"; break;}
     default {
-        if (-not $file) {Write-Host "A positional argument for a Graphene file name must be provided."; exit 1}
         java -jar ../bin/src/graphene.jar $file "graphenec" $args;
-        $file = '../bin/' + (Split-Path -Path $file -Leaf) + '.tm'
+        $file = "../bin/" + (Split-Path $file.Replace(".gr",".tm") -Leaf);
         $tmOutStr = & "../bin/tm-cli-go.exe" $file $args
         $numbers = $tmOutStr | Where-Object { $_.StartsWith('O') } | ForEach-Object {
             ($_ -split '\s+')[-1] -as [int]
