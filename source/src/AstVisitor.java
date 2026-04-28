@@ -274,7 +274,7 @@ class IfNode extends Node {
     protected Lex nodeType() {return Lex.IF;}
     protected Lex getSemanticType() {return semanticType;}
     protected void setSemanticType(Lex type) {semanticType = type;}
-    protected String getErrorStr() {return "";}
+    protected String getErrorStr() {return "'if'";}
     protected String getName() {return "";}
 }
 
