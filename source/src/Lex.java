@@ -7,7 +7,7 @@ public enum Lex {
     // Keywords
     INTEGER, BOOLEAN, IF, ELSE, NOT, AND, FN, FNCALL, OR, ID, UNDERSCORE, BOOLEANLITERAL,
     TRUE, FALSE, INTEGERLITERAL, LEFTPAREN, RIGHTPAREN, COMMA, COLON, RETURN,
-    GREATERTHAN, COMMENT, PLUS, MINUS, TIMES, DIVIDE, LESSTHAN, EQUIVALENT, 
+    GREATERTHAN, COMMENT, PLUS, MINUS, TIMES, DIVIDE, LESSTHAN, EQUIVALENT,
     EQUALS,
     
     // Parsing rules
@@ -27,6 +27,7 @@ public enum Lex {
     PRIMITIVEBINARY, PRIMITIVEUNARY, PRIMITIVEARG, MISSINGMAINARGS, EXCESSMAINARGS,
 
     // Opcodes for code generation
+    JMP,
     CALL, // call fn name and it's args
     ENTRY, // signify entry into a fn 
     EXIT, // signify departure from a fn
@@ -39,6 +40,7 @@ public enum Lex {
     MALLOC, // first val given is the space allocated in memory for the size of a given frame
     RESTORE, // used directly after malloc to restore previous frame
     CONST, // place const into reg
+    MOV, // first arg is the reg whose val is taken from, second, is the reg the val is moved to
     STEP, // uses first val to either increase or decrease the second val's reg
     GOTO, // goes to first instruction of frame given
     LOAD, // place mem addr val + fp into reg at second val
