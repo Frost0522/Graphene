@@ -192,10 +192,10 @@ public class Analyzer extends Throwable {
                 throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Primitive "+node.getName()+" must not be used in binary expressions.");
             }
             case PRIMITIVEUNARY: {
-                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Primitive "+node.getName()+" must not be used in unary expressions.");
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Primitive "+node.getErrorStr()+" must not be used in unary expressions.");
             }
             case PRIMITIVEARG: {
-                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Primitive "+node.getName()+" must not be passed as an argument.");
+                throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Primitive "+node.getErrorStr()+" must not be passed as an argument.");
             }
             case NOID: {
                 throw new Analyzer("Line "+line+" Column "+column+"\nSemantic Error: Unassigned "+node.getErrorStr()+", check that the"+
