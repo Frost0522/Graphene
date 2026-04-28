@@ -14,7 +14,6 @@ public class CodeGen implements AstVisitor {
     private ArrayList<Tac> triplesArray = new ArrayList<>();
     private StringBuilder targetCodeBuilder = new StringBuilder();
     private ArrayList<String> targetCodeArray = new ArrayList<>();
-    private Stack<Integer> labelStack = new Stack<>();
     private StackFrame frame = new StackFrame();
 
     public String getTargetCode() {
@@ -34,17 +33,21 @@ public class CodeGen implements AstVisitor {
         symbolTable.getFunction("main").accept(this);
         write(Lex.EPILOGUE,"");
 
-        genTargetCode();
+        // genTargetCode();
 
-        // for (int i=0;i<triplesArray.size();i++) {System.out.println(i+" "+triplesArray.get(i));}
-        // System.out.println(); genTargetCode(); System.out.println(getTargetCode()); System.out.println();
+        for (int i=0;i<triplesArray.size();i++) {System.out.println(i+" "+triplesArray.get(i));}
+        System.out.println(); genTargetCode(); System.out.println(getTargetCode()); System.out.println();
     }
 
     @Override
     public void visit(FnNode fnNode) throws Analyzer {
         currentFn=fnNode; frame.clone(stackFrameMap.get(fnNode.getName()));
         write(Lex.ENTRY,fnNode.getName());
-        for (Node bodyNode : fnNode.getBodyNodes()) {bodyNode.accept(this);}
+        for (Node bodyNode : fnNode.getBodyNodes()) {
+            bodyNode.accept(this);
+            if (bodyNode.getName().equals("print")) {write(Lex.PRINT,0);}
+            else {write(Lex.RETURN,"");}
+        }
         write(Lex.EXIT,fnNode.getName());
     }
 
@@ -53,7 +56,7 @@ public class CodeGen implements AstVisitor {
         write(Lex.CALL,callNode.getName(),callNode.getArgs().size());
         if (callNode.getName().equals("print")) {
             callNode.getArgs().getFirst().accept(this); /* arg is placed into reg 0 */
-            write(Lex.PRINT,"");
+            // write(Lex.PRINT,0);
         } else if (frame.getName().equals(callNode.getName())) {
             StackFrame newFrame = new StackFrame().clone(stackFrameMap.get(callNode.getName()));
             for (int i=0;i<callNode.getArgs().size();i++) {
@@ -88,23 +91,11 @@ public class CodeGen implements AstVisitor {
         }
     }
 
-    @Override @SuppressWarnings("incomplete-switch")
+    @Override
     public void visit(IfNode ifNode) throws Analyzer {
-        ifNode.getIf().accept(this);
-        write(Lex.IF,ifNode.getIf().nodeType(),0);
-        ifNode.getThen().accept(this);
-        switch (ifNode.getThen().nodeType()) {
-            case PLUS,MINUS,DIVIDE,TIMES,EQUIVALENT,LESSTHAN,AND,OR,ID,LITERAL: {
-                write(Lex.RETURN, ""); break;
-            }
-        }
-        write(Lex.ELSE,""); 
-        ifNode.getElse().accept(this);
-        switch (ifNode.getElse().nodeType()) {
-            case PLUS,MINUS,DIVIDE,TIMES,EQUIVALENT,LESSTHAN,AND,OR,ID,LITERAL: {
-                write(Lex.RETURN, ""); break;
-            }
-        }
+        ifNode.getIf().accept(this); write(Lex.IF,0); ifNode.getThen().accept(this);
+        if (ifNode.getThen().nodeType()!=Lex.IF) {write(Lex.JMP,"");}
+        write(Lex.ELSE,""); ifNode.getElse().accept(this);
     }
 
     @Override @SuppressWarnings("incomplete-switch")
@@ -117,7 +108,8 @@ public class CodeGen implements AstVisitor {
         if (!rIsTerminal) {
             write(Lex.STORE,0,frame.size()); makeTemp(frame);
             binNode.getRight().accept(this);
-            write(Lex.LOAD,1,frame.size()-1); removeTemp(frame);
+            write(Lex.MOV,0,1);
+            write(Lex.LOAD,0,frame.size()-1); removeTemp(frame);
         } else {new Assign(binNode.getRight(),1);}
 
         switch (binNode.nodeType()) {
@@ -130,7 +122,7 @@ public class CodeGen implements AstVisitor {
 
     @Override
     public void visit(NotNode notNode) throws Analyzer {
-        notNode.getNode().accept(this); write(notNode.nodeType(),"0");
+        notNode.getNode().accept(this); write(notNode.nodeType(),0);
     }
 
     @Override
@@ -182,13 +174,15 @@ public class CodeGen implements AstVisitor {
 
     @SuppressWarnings("incomplete-switch")
     private void genTargetCode() {
+        int insOffset = 0;
+        Stack<Integer> jmpStack = new Stack<>(), labelStack = new Stack<>();
         StackFrame frame = new StackFrame().clone(stackFrameMap.get("main")),
         prevFrame = new StackFrame().clone(frame);
         for (Tac tac : triplesArray) {
             switch (tac.op) {
-                case ENTRY: {targetCodeArray.add("* "+tac.arg1+"\n"); frame.setIns(insNum); break;}
-                case BEGINPROLOGUE: {targetCodeArray.add("* prologue\n"); break;}
-                case ENDPROLOGUE: {targetCodeArray.add("\n"); break;}
+                case ENTRY: {targetCodeArray.add("* "+tac.arg1+"\n"); frame.setIns(insNum); insOffset++; break;}
+                case BEGINPROLOGUE: {targetCodeArray.add("* prologue\n"); insOffset++; break;}
+                case ENDPROLOGUE: {targetCodeArray.add("\n"); insOffset++; break;}
                 case EPILOGUE: {
                     for (int i=0;i<targetCodeArray.size();i++) {
                         targetCodeArray.set(i,targetCodeArray.get(i).replace("$",insNum+""));
@@ -213,7 +207,7 @@ public class CodeGen implements AstVisitor {
                 }
                 case CONST: {targetCodeArray.add(insNum+": LDC "+tac.arg2+","+tac.arg1+"(0)\n"); insNum++; break;}
                 case IF: {
-                    targetCodeArray.add(insNum+": JEQ "+tac.arg2+",$(4)\n");
+                    targetCodeArray.add(insNum+": JEQ "+tac.arg1+",$(4)\n");
                     labelStack.push(targetCodeArray.size()-1); insNum++; break;
                 }
                 case ELSE: {
@@ -258,6 +252,8 @@ public class CodeGen implements AstVisitor {
                 case LOAD: {targetCodeArray.add(insNum+": LD "+tac.arg1+","+tac.arg2+"(5)\n"); insNum++; break;}
                 case STORE: {targetCodeArray.add(insNum+": ST "+tac.arg1+","+tac.arg2+"(5)\n"); insNum++; break;}
                 case PRINT: {targetCodeArray.add(insNum+": OUT 0,0,0\n"); insNum++; break;}
+                case MOV: {targetCodeArray.add(insNum+": LDA "+tac.arg2+",0("+tac.arg1+")\n"); insNum++; break;}
+                case JMP: {targetCodeArray.add(insNum+": LDA 7,$(4)\n"); jmpStack.push(insNum); insNum++; break;}
                 case GOTO: {
                     targetCodeArray.add(insNum+": LDA 7,"+frame.getIns()+"(4)\n"); 
                     insNum++; StackFrame tmpFrame = new StackFrame().clone(frame);
@@ -282,6 +278,10 @@ public class CodeGen implements AstVisitor {
                     insNum+=4; break;
                 }
                 case RETURN: {
+                    while (!jmpStack.isEmpty()) {
+                        String newCode = targetCodeArray.get(jmpStack.peek()+insOffset).replace("$",insNum+"");
+                        targetCodeArray.set(jmpStack.peek()+insOffset,newCode); jmpStack.pop();
+                    }
                     targetCodeArray.add(insNum+": LD 1,"+frame.getStateLoc()+"(5)\n");
                     targetCodeArray.add((insNum+1)+": JNE 1,"+(insNum+3)+"(4)\n");
                     targetCodeArray.add((insNum+2)+": LDA 7,$(4)\n");
