@@ -145,22 +145,23 @@ public class SemanticAnalyzer implements AstVisitor {
                     new Analyzer(Lex.TOOMANYARGS,callNode);
                 } 
                 for (int i=0;i<callNode.getArgs().size();i++) {
-                    callNode.getArgs().get(i).accept(this);
+                    Node argNode = callNode.getArgs().get(i); argNode.accept(this);
                     // Make sure the function call arguments are not primitive.
-                    if (callNode.getArgs().get(i).getName().equals("print")) {
-                        new Analyzer(Lex.PRIMITIVEARG,callNode.getArgs().get(i));
+                    if (argNode.getName().equals("print")||argNode.nodeType()==Lex.IF) {
+                        new Analyzer(Lex.PRIMITIVEARG,argNode);
                     }
                     // Check that function call arguments semantically match their parameter declarations.
                     if (allFunctions.get(callNode.getName()).getParamNodes().get(i).getSemanticType()!=
-                        callNode.getArgs().get(i).getSemanticType()) {
-                            new Analyzer(Lex.BADARGTYPE,callNode.getArgs().get(i));
+                        argNode.getSemanticType()) {new Analyzer(Lex.BADARGTYPE,argNode);
                     }
                 }
             } else {
                 for (Node argNode : callNode.getArgs()) {
                     argNode.accept(this);
                     // Make sure the function call arguments are not primitive.
-                    if (argNode.getName().equals("print")) {new Analyzer(Lex.PRIMITIVEARG,argNode);}
+                    if (argNode.getName().equals("print")||argNode.nodeType()==Lex.IF) {
+                        new Analyzer(Lex.PRIMITIVEARG,argNode);
+                    }
                 }
             }
         }
@@ -225,9 +226,10 @@ public class SemanticAnalyzer implements AstVisitor {
         @Override
         public void visit(ExpNode expNode) throws Analyzer {
             expNode.getNode().accept(this);
-            // Verify primitive print is not being used in expressions.
-            if (expNode.getName().equals("print")) {new Analyzer(Lex.PRIMITIVEUNARY,expNode);}
-            expNode.setSemanticType(expNode.getNode().getSemanticType());
+            // Verify expressions do not contain primitives.
+            if (expNode.getName().equals("print")||expNode.getNode().nodeType()==Lex.IF) {
+                new Analyzer(Lex.PRIMITIVEUNARY,expNode.getNode());
+            } expNode.setSemanticType(expNode.getNode().getSemanticType());
             // If an expression's semantic type is boolean make sure it is not made negative.
             if (expNode.getSemanticType()==Lex.BOOLEAN && expNode.getSign()==Lex.MINUS) {
                 new Analyzer(Lex.SIGNANDTYPEMISSMATCH,expNode);
