@@ -1,6 +1,7 @@
 package src;
 import java.util.ArrayList;
 import java.util.HashSet;
+import src.CodeGen.Tac;
 
 public class StackFrame {
 
@@ -8,13 +9,15 @@ public class StackFrame {
     private int argSize, size=argSize+1, tmpSize, ins;
     private HashSet<String> callers = new HashSet<>(), callees = new HashSet<>();
     private ArrayList<Node> params;
+    private ArrayList<Tac> ir = new ArrayList<>();
+    private ArrayList<String> tm = new ArrayList<>();
 
     public StackFrame() {}
 
     public void setName(String name) {this.name=name;}
     public String getName() {return name;}
 
-    public int getStateLoc() {return size()-1;}
+    public int getStateLoc() {return size()-getTmpSize()-1;}
 
     public void addTmp() {tmpSize++;}
     public void removeTmp() {tmpSize--;}
@@ -34,6 +37,7 @@ public class StackFrame {
     public HashSet<String> callees() {return callees;}
     
     public void setParams(ArrayList<Node> params) {this.params=params;}
+    public String getParamName(Integer index) {return params.get(index).getName();}
     public int getParamIndex(String idName) {
         for (int i=0;i<params.size();i++) {
             if (params.get(i).getName().equals(idName)) {
@@ -42,15 +46,9 @@ public class StackFrame {
         } return -1;
     }
 
-    public StackFrame clone(StackFrame frame) {
-        this.argSize=frame.argSize;
-        this.size=frame.size;
-        this.tmpSize=frame.tmpSize;
-        this.name=frame.name;
-        this.ins=frame.ins;
-        this.callees=frame.callees;
-        this.callers=frame.callers;
-        this.params=frame.params;
-        return this;
-    }
+    public void addIR(Tac tac) {ir.add(tac);}
+    public ArrayList<Tac> getIR() {return ir;}
+
+    public void addTM(String s) {tm.add(s);}
+    public ArrayList<String> getTM() {return tm;}
 }
