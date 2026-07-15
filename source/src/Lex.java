@@ -27,22 +27,16 @@ public enum Lex {
     PRIMITIVEBINARY, PRIMITIVEUNARY, PRIMITIVEARG, MISSINGMAINARGS, EXCESSMAINARGS,
 
     // Opcodes for code generation
-    JMP,
+    ALLOC, // push val in reg 0 on to the stack frame, and move tos one ahead
+    DALLOC, // remove val at top of stack frame to reg 0, and move tos back one
+    BEGINCALL, // where a function call begins
+    ENDCALL, // where a function call ends
     CALL, // call fn name and it's args
     ENTRY, // signify entry into a fn 
     EXIT, // signify departure from a fn
-    BEGINCALL, // signify when a frame is referenced 
-    ENDCALL, // signify when a frame is dereferenced
-    BEGINPROLOGUE, // signify beginning of prologue
-    ENDPROLOGUE, // signify ending of prologue
-    EPILOGUE, // ends execution of the program
     PRINT, // output val at reg 0
-    MALLOC, // first val given is the space allocated in memory for the size of a given frame
-    RESTORE, // used directly after malloc to restore previous frame
     CONST, // place const into reg
     MOV, // first arg is the reg whose val is taken from, second, is the reg the val is moved to
-    STEP, // uses first val to either increase or decrease the second val's reg
-    GOTO, // goes to first instruction of frame given
     LOAD, // place mem addr val + fp into reg at second val
     STORE; // place register into memory address at the fp plus second value
 
@@ -119,7 +113,7 @@ public enum Lex {
 // Used for checking if a parse stack value, of type lex, adheres to a particular set of rules.
     public static Lex[] isTerminal() {
         return new Lex[]{FN,LEFTPAREN,RIGHTPAREN,RETURN,COMMA,COLON,INTEGER,BOOLEAN,EQUIVALENT,LESSTHAN,
-                       OR,PLUS,MINUS,AND,TIMES,DIVIDE,NOT,IF,ELSE,ID,BOOLEANLITERAL,INTEGERLITERAL};
+                         OR,PLUS,MINUS,AND,TIMES,DIVIDE,NOT,IF,ELSE,ID,BOOLEANLITERAL,INTEGERLITERAL};
     }
 
     public static Lex[] canBeNegative() {return new Lex[]{INTEGERLITERAL,BOOLEANLITERAL,ID,FNCALL,EXP,LEFTPAREN};}
@@ -158,9 +152,9 @@ public enum Lex {
     public static Lex[] plusRules() {return new Lex[]{MKPLUS,SIMPLEEXP,PLUS};}
     public static Lex[] minusRules() {return new Lex[]{MKMINUS,SIMPLEEXP,MINUS};}
     public static Lex[] termRules() {return new Lex[]{TERMTAIL,FACTOR};}
-    public static Lex[] andRules() {return new Lex[]{MKAND,TERM,AND};}
-    public static Lex[] timesRules() {return new Lex[]{MKTIMES,TERM,TIMES};}
-    public static Lex[] divideRules() {return new Lex[]{MKDIVIDE,TERM,DIVIDE};}
+    public static Lex[] andRules() {return new Lex[]{MKAND,FACTOR,AND};}
+    public static Lex[] timesRules() {return new Lex[]{MKTIMES,FACTOR,TIMES};}
+    public static Lex[] divideRules() {return new Lex[]{MKDIVIDE,FACTOR,DIVIDE};}
     public static Lex[] leftParenFactorRules() {return new Lex[]{RIGHTPAREN,MKEXP,EXP,LEFTPAREN};}
     public static Lex[] ifRules() {return new Lex[]{MKIF,EXP,ELSE,EXP,RIGHTPAREN,EXP,LEFTPAREN,IF};}
     public static Lex[] idRules() {return new Lex[]{ARGLIST,MKID,ID};}
