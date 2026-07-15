@@ -128,10 +128,10 @@ public class SemanticAnalyzer implements AstVisitor {
             frame.addCallee(callNode.getName());
             // If not print, set the call node's semantic type to that of it's declared function return type.
             if (!callNode.getName().equals("print")) {
+                // Check that the function has been declared.
+                if (!allFunctions.containsKey(callNode.getName())) {new Analyzer(Lex.NOFNCALL,callNode);}
                 // Add calling frame as caller to the callee.
                 stackFrameMap.get(callNode.getName()).addCaller(frame.getName());
-                // Check that the function has been declared.
-                if (!allFunctions.containsKey(callNode.getName())) {new Analyzer(Lex.NOFNCALL,callNode);} 
                 callNode.setSemanticType(allFunctions.get(callNode.getName()).getReturnType().getSemanticType());
                 // If a function call's semantic type is boolean make sure it is not made negative.
                 if (callNode.getSemanticType()==Lex.BOOLEAN && callNode.getSign()==Lex.MINUS) {
@@ -147,7 +147,7 @@ public class SemanticAnalyzer implements AstVisitor {
                 for (int i=0;i<callNode.getArgs().size();i++) {
                     Node argNode = callNode.getArgs().get(i); argNode.accept(this);
                     // Make sure the function call arguments are not primitive.
-                    if (argNode.getName().equals("print")||argNode.nodeType()==Lex.IF) {
+                    if (argNode.getName().equals("print")) {
                         new Analyzer(Lex.PRIMITIVEARG,argNode);
                     }
                     // Check that function call arguments semantically match their parameter declarations.
@@ -159,7 +159,7 @@ public class SemanticAnalyzer implements AstVisitor {
                 for (Node argNode : callNode.getArgs()) {
                     argNode.accept(this);
                     // Make sure the function call arguments are not primitive.
-                    if (argNode.getName().equals("print")||argNode.nodeType()==Lex.IF) {
+                    if (argNode.getName().equals("print")) {
                         new Analyzer(Lex.PRIMITIVEARG,argNode);
                     }
                 }
