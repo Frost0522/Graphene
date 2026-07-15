@@ -117,13 +117,13 @@ public class Parser {
             case TERMTAIL: {
                 if (listContains(nextType,Lex.isTermTail())) {pStack.pop(); break;}
                 if (nextType == Lex.AND) {
-                    pStack.pop(); for (Lex rule : Lex.andRules()) {pStack.push(rule);} break;
+                    for (Lex rule : Lex.andRules()) {pStack.push(rule);} break;
                 }
                 if (nextType == Lex.TIMES) {
-                    pStack.pop(); for (Lex rule : Lex.timesRules()) {pStack.push(rule);} break;
+                    for (Lex rule : Lex.timesRules()) {pStack.push(rule);} break;
                 }
                 if (nextType == Lex.DIVIDE) {
-                    pStack.pop(); for (Lex rule : Lex.divideRules()) {pStack.push(rule);} break;
+                    for (Lex rule : Lex.divideRules()) {pStack.push(rule);} break;
                 } new Analyzer(tokenLst, deadLst, pStack);
             }
             case FACTOR: {
@@ -206,15 +206,14 @@ public class Parser {
         }
     }
 
-    private Token removeTerminal() throws Analyzer {
-
+    private void removeTerminal() throws Analyzer {
         while (listContains(pStack.peek(),Lex.isTerminal())) {
             if (!pStack.peek().equals(tokenLst.get(0).getType())) {new Analyzer(tokenLst, deadLst, pStack);}
             lastToken = tokenLst.get(0); nextToken = getNextToken();
             if (lastToken.getType()==Lex.MINUS && (!listContains(nextToken.getType(),Lex.canBeNegative()))) {
                 new Analyzer(tokenLst, deadLst, pStack);
             } pStack.pop();
-        } return nextToken;
+        }
     }
 
     private void isDone() {
