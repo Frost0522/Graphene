@@ -32,12 +32,12 @@ public class CodeGen implements AstVisitor {
         tm.append(insNum+": OUT 0,0,0\n"); insNum++;
         tm.append(insNum+": HALT 0,0,0");
 
-        for (StackFrame f : stackFrameMap.values()) {
-            for (Tac tac : f.getIR()) {System.out.println(tac);} 
-            System.out.println();
-        }
+        // for (StackFrame f : stackFrameMap.values()) {
+        //     for (Tac tac : f.getIR()) {System.out.println(tac);} 
+        //     System.out.println();
+        // }
         
-        System.out.println(tm);
+        // System.out.println(tm);
     }
 
     @Override
